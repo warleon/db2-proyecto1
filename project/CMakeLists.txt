@@ -27,15 +27,25 @@ link_directories(src libs)
 enable_testing()
 
 add_executable(
-  dummyTest
-  tests/dummyTest.cpp
+  hashTable
+  tests/hashTableTest.cpp
 )
 target_link_libraries(
-  dummyTest
+  hashTable
   PRIVATE
   gtest_main
 )
-gtest_discover_tests(dummyTest)
+add_executable(
+  sequential
+  tests/sequentialTest.cpp
+)
+target_link_libraries(
+  sequential
+  PRIVATE
+  gtest_main
+)
+gtest_discover_tests(hashTable)
+gtest_discover_tests(sequential)
 
 # add the executable
 add_executable(
