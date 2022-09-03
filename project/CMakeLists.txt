@@ -7,10 +7,11 @@ project(Project_1)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-SET(GCC_COMPILE_FLAGS "-Wall -Werror -fsanitize=address")
+SET(GCC_COMPILE_FLAGS "-Wall -Werror -fsanitize=address -pthread")
 set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COMPILE_FLAGS}")
 
 include(FetchContent)
+#include <googletest>
 FetchContent_Declare(
   googletest
   URL https://github.com/google/googletest/archive/609281088cfefc76f9d0ce82e1ff6c30cc3591e5.zip
@@ -20,8 +21,8 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 include(GoogleTest)
 
-include_directories(src)
-link_directories(src)
+include_directories(src libs)
+link_directories(src libs)
 
 enable_testing()
 
@@ -37,4 +38,7 @@ target_link_libraries(
 gtest_discover_tests(dummyTest)
 
 # add the executable
-add_executable(program src/main.cpp)
+add_executable(
+  program 
+  src/main.cpp
+)
