@@ -5,5 +5,7 @@ services:
       - ./project:/project
       - ./data:/data
     working_dir: /project
+    ports:
+      - 80:80
     command: 
       "make"

@@ -4,6 +4,10 @@
 #include <iostream>
 
 int main(int argc, char** argv) {
-  std::cout << "Hola proyecto\n";
+  crow::SimpleApp app;
+
+  CROW_ROUTE(app, "/")([]() { return "Hello world"; });
+
+  app.port(80).multithreaded().run();
   return 0;
 }
