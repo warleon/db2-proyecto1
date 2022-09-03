@@ -1,0 +1,9 @@
+services:
+  cpp:
+    build: .
+    volumes:
+      - ./project:/project
+      - ./data:/data
+    working_dir: /project
+    command: 
+      "make"
