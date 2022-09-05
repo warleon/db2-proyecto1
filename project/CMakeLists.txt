@@ -30,6 +30,7 @@ enable_testing()
 add_executable(
   generalRecord
   tests/genRecordTest.cpp
+  src/genRecord.cpp
 )
 target_link_libraries(
   generalRecord
