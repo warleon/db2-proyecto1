@@ -59,6 +59,7 @@ target_link_libraries(
 )
 gtest_discover_tests(hashTable)
 gtest_discover_tests(sequential)
+gtest_discover_tests(generalRecord)
 
 #----------------------------DEMO----------------------------------------------#
 add_executable(

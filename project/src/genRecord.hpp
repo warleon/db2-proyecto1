@@ -31,10 +31,10 @@ void bytesToFloat96(const char* from, long double* to, size_t n);
 //[General Record Information] Information about a record to know how many bytes
 // to read and write  to de file
 class GenRecordInfo {
+ public:
   using dtypeSet_t = std::vector<dtype>;
   using sizeSet_t = std::vector<size_t>;
 
- public:
   GenRecordInfo(dtypeSet_t, sizeSet_t);
   GenRecordInfo(dtypeSet_t&&, sizeSet_t&&);
   GenRecordInfo(dtype*, size_t*, size_t);
