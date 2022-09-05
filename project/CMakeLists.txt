@@ -26,6 +26,17 @@ link_directories(src libs)
 
 enable_testing()
 
+#--------------------------------GENERAL RECORD------------------------------------------#
+add_executable(
+  generalRecord
+  tests/genRecordTest.cpp
+)
+target_link_libraries(
+  generalRecord
+  PRIVATE
+  gtest_main
+)
+#----------------------------HASH TABLE----------------------------------------------#
 add_executable(
   hashTable
   tests/hashTableTest.cpp
@@ -35,6 +46,7 @@ target_link_libraries(
   PRIVATE
   gtest_main
 )
+#----------------------------SEQUENTIAL----------------------------------------------#
 add_executable(
   sequential
   tests/sequentialTest.cpp
@@ -47,7 +59,7 @@ target_link_libraries(
 gtest_discover_tests(hashTable)
 gtest_discover_tests(sequential)
 
-# add the executable
+#----------------------------DEMO----------------------------------------------#
 add_executable(
   program 
   src/main.cpp
