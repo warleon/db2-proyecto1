@@ -26,10 +26,11 @@ GenRecordInfo::GenRecordInfo(dtypeSet_t&& fixLenTypes_,
   fieldCount = fieldItemsCount.size();
   computeSizeAndOffsets();
 }
-GenRecordInfo::GenRecordInfo(dtype* dtypeBuffer, size_t* sizeBuffer,
+GenRecordInfo::GenRecordInfo(const dtype* dtypeBuffer, const size_t* sizeBuffer,
                              size_t fieldCount_)
     : fieldType(dtypeBuffer, dtypeBuffer + fieldCount_),
-      fieldItemsCount(sizeBuffer, sizeBuffer + fieldCount_) {
+      fieldItemsCount(sizeBuffer, sizeBuffer + fieldCount_),
+      fieldCount(fieldCount_) {
   computeSizeAndOffsets();
 }
 

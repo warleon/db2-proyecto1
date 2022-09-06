@@ -20,6 +20,7 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 include(GoogleTest)
+set($ENV{$CTEST_OUTPUT_ON_FAILURE} 1)
 
 include_directories(src libs)
 link_directories(src libs)

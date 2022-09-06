@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <fstream>
 #include <genRecord.hpp>
 #include <utility>
 
@@ -12,6 +13,7 @@ auto sizevec = GenRecordInfo::sizeSet_t(sizes, sizes + 7);
 auto typevecref = std::move(GenRecordInfo::dtypeSet_t(types, types + 7));
 auto sizevecref = std::move(GenRecordInfo::sizeSet_t(sizes, sizes + 7));
 
-TEST(GenRecord, constructorTest_0) { GenRecordInfo(types, sizes, 7); }
+TEST(GenRecord, constructorTest_0) { GenRecordInfo(&types[0], &sizes[0], 7); }
 TEST(GenRecord, constructorTest_1) { GenRecordInfo(typevec, sizevec); }
 TEST(GenRecord, constructorTest_2) { GenRecordInfo(typevecref, sizevecref); }
+TEST(GenRecord, writeInfoTest_0) { GenRecordInfo(typevec, sizevec); }

@@ -37,7 +37,7 @@ class GenRecordInfo {
 
   GenRecordInfo(dtypeSet_t, sizeSet_t);
   GenRecordInfo(dtypeSet_t&&, sizeSet_t&&);
-  GenRecordInfo(dtype*, size_t*, size_t);
+  GenRecordInfo(const dtype*, const size_t*, size_t);
   ~GenRecordInfo() {}
 
   // use when reading records of different sizes; ensure that the file is valid
