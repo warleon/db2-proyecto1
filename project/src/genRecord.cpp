@@ -1,7 +1,9 @@
 #include "genRecord.hpp"
 
 #include <exception>
+#include <iostream>
 #include <utility>
+
 void GenRecordInfo::constructorCheckConditions() {
   if (fieldItemsCount.size() != fieldType.size()) {
     throw std::runtime_error(
@@ -29,8 +31,10 @@ GenRecordInfo::GenRecordInfo(dtypeSet_t&& fixLenTypes_,
 GenRecordInfo::GenRecordInfo(const dtype* dtypeBuffer, const size_t* sizeBuffer,
                              size_t fieldCount_)
     : fieldType(dtypeBuffer, dtypeBuffer + fieldCount_),
-      fieldItemsCount(sizeBuffer, sizeBuffer + fieldCount_),
-      fieldCount(fieldCount_) {
+      fieldItemsCount(sizeBuffer, sizeBuffer + fieldCount_) {
+  constructorCheckConditions();
+  fieldCount = fieldItemsCount.size();
+  std::cerr << "fieldCount: " << fieldCount << std::endl;
   computeSizeAndOffsets();
 }
 
@@ -38,7 +42,9 @@ void GenRecordInfo::computeSizeAndOffsets() {
   fieldOffset.resize(fieldCount);
   fieldOffset[0] = 0;
   for (size_t i = 1; i < fieldCount; i++) {
-    fieldOffset[i] += dtypeSize[fieldType[i - 1]] * fieldItemsCount[i - 1];
+    std::cerr << fieldType[i - 1] << std::endl;
+    fieldOffset[i] = fieldOffset[i - 1] +
+                     dtypeSize[fieldType[i - 1]] * fieldItemsCount[i - 1];
   }
   size = fieldOffset[fieldCount - 1] +
          dtypeSize[fieldType[fieldCount - 1]] * fieldItemsCount[fieldCount - 1];
@@ -52,20 +58,24 @@ void GenRecordInfo::fetchMany(Record* records, size_t n, std::ifstream& in) {
 }
 void GenRecordInfo::writeInfo(std::ofstream& infoFile,
                               std::ofstream& metaFile) {
-  metaFile.write((char*)&size, sizeof(size_t));
+  metaFile.write((char*)&fieldCount, sizeof(size_t));
   infoFile.write((char*)fieldType.data(), sizeof(dtype) * fieldType.size());
   infoFile.write((char*)fieldItemsCount.data(),
                  sizeof(size_t) * fieldItemsCount.size());
 }
 GenRecordInfo GenRecordInfo::readInfo(std::ifstream& infoFile,
                                       std::ifstream& metaFile) {
-  size_t fieldCount;
+  size_t fieldCount = 0;
   metaFile.read((char*)&fieldCount, sizeof(size_t));
+  std::cerr << "Reading" << fieldCount << std::endl;
   dtype* dtypeBuffer = new dtype[fieldCount];
   size_t* sizeBuffer = new size_t[fieldCount];
   infoFile.read((char*)dtypeBuffer, sizeof(dtype) * fieldCount);
   infoFile.read((char*)sizeBuffer, sizeof(size_t) * fieldCount);
-  return GenRecordInfo(dtypeBuffer, sizeBuffer, fieldCount);
+  GenRecordInfo res = GenRecordInfo(dtypeBuffer, sizeBuffer, fieldCount);
+  delete[] dtypeBuffer;
+  delete[] sizeBuffer;
+  return res;
 }
 
 size_t GenRecordInfo::getSize() { return size; }

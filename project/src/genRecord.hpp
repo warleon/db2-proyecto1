@@ -5,9 +5,17 @@
 #include <fstream>
 #include <vector>
 
-enum dtype : char { int8 = 0, int16, int32, int64, float32, float64, float96 };
+enum dtype : size_t {
+  int8 = 0,
+  int16 = 1,
+  int32 = 2,
+  int64 = 3,
+  float32 = 4,
+  float64 = 5,
+  float96 = 6
+};
 
-const size_t dtypeSize[] = {
+const size_t dtypeSize[7] = {
     sizeof(char),  sizeof(short int), sizeof(int),        sizeof(long int),
     sizeof(float), sizeof(double),    sizeof(long double)};
 
