@@ -48,22 +48,43 @@ class GenRecordInfo {
   GenRecordInfo(const dtype*, const size_t*, size_t);
   ~GenRecordInfo() {}
 
-  // use when reading records of different sizes; ensure that the file is valid
-  // and its cursor is in the correct position
-  void fetchOne(Record, std::ifstream&);
+  // record operations
 
-  // use when multiple record is of the same size; ensure that the file is valid
-  // and its cursor is in the correct position
-  void fetchMany(Record*, size_t, std::ifstream&);
+  // allocates space for many contiguous Records with 0 as fields values
+  Record* allocate(size_t);
 
-  // reads the information needed to interpret the record data needs a metadata
-  // file and the file where previus information were wrote
+  // frees a previus allocated space
+  void deallocate(Record*);
+
+  // writes n records to the specified file; ensure that the file is valid
+  // and its cursor is at the correct position
+  void write(Record*, size_t, std::ofstream&);
+
+  // reads n contiguous records of the same type; ensure that the file is valid
+  // and its cursor is at the correct position
+  void read(Record*, size_t, std::ifstream&);
+
+  // gets a reference to the n field of the record
+  void field(Record, size_t, char*&);
+
+  // gets the size of the field in bytes
+  size_t fieldSize(size_t);
+
+  // gets the ith record in a record array
+  Record at(Record*, size_t);
+
+  // records info operations
+
+  // reads the information needed to interpret the record data needs a
+  // metadata file and the file where previus information were wrote
   static GenRecordInfo readInfo(std::ifstream&, std::ifstream&);
+
   // writes the information needed to interpret the record data
   void writeInfo(std::ofstream&, std::ofstream&);
 
   // list of types of every field
   const dtypeSet_t fieldType;
+
   // number of items in the field
   const sizeSet_t fieldItemsCount;
 

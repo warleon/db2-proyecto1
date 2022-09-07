@@ -1,8 +1,29 @@
 #include "genRecord.hpp"
 
 #include <exception>
-#include <iostream>
 #include <utility>
+
+void bytesToInt8(const char* from, char* to, size_t n) {
+  memcpy(to, from, n * sizeof(char));
+}
+void bytesToInt16(const char* from, short int* to, size_t n) {
+  memcpy(to, from, n * sizeof(short int));
+}
+void bytesToInt32(const char* from, int* to, size_t n) {
+  memcpy(to, from, n * sizeof(int));
+}
+void bytesToInt64(const char* from, long int* to, size_t n) {
+  memcpy(to, from, n * sizeof(long int));
+}
+void bytesToFloat32(const char* from, float* to, size_t n) {
+  memcpy(to, from, n * sizeof(float));
+}
+void bytesToFloat64(const char* from, double* to, size_t n) {
+  memcpy(to, from, n * sizeof(double));
+}
+void bytesToFloat96(const char* from, long double* to, size_t n) {
+  memcpy(to, from, n * sizeof(long double));
+}
 
 void GenRecordInfo::constructorCheckConditions() {
   if (fieldItemsCount.size() != fieldType.size()) {
@@ -34,7 +55,6 @@ GenRecordInfo::GenRecordInfo(const dtype* dtypeBuffer, const size_t* sizeBuffer,
       fieldItemsCount(sizeBuffer, sizeBuffer + fieldCount_) {
   constructorCheckConditions();
   fieldCount = fieldItemsCount.size();
-  std::cerr << "fieldCount: " << fieldCount << std::endl;
   computeSizeAndOffsets();
 }
 
@@ -42,7 +62,6 @@ void GenRecordInfo::computeSizeAndOffsets() {
   fieldOffset.resize(fieldCount);
   fieldOffset[0] = 0;
   for (size_t i = 1; i < fieldCount; i++) {
-    std::cerr << fieldType[i - 1] << std::endl;
     fieldOffset[i] = fieldOffset[i - 1] +
                      dtypeSize[fieldType[i - 1]] * fieldItemsCount[i - 1];
   }
@@ -50,10 +69,7 @@ void GenRecordInfo::computeSizeAndOffsets() {
          dtypeSize[fieldType[fieldCount - 1]] * fieldItemsCount[fieldCount - 1];
 }
 
-void GenRecordInfo::fetchOne(Record record, std::ifstream& in) {
-  in.read(record, size);
-}
-void GenRecordInfo::fetchMany(Record* records, size_t n, std::ifstream& in) {
+void GenRecordInfo::read(Record* records, size_t n, std::ifstream& in) {
   in.read((char*)records, size * n);
 }
 void GenRecordInfo::writeInfo(std::ofstream& infoFile,
@@ -67,7 +83,6 @@ GenRecordInfo GenRecordInfo::readInfo(std::ifstream& infoFile,
                                       std::ifstream& metaFile) {
   size_t fieldCount = 0;
   metaFile.read((char*)&fieldCount, sizeof(size_t));
-  std::cerr << "Reading" << fieldCount << std::endl;
   dtype* dtypeBuffer = new dtype[fieldCount];
   size_t* sizeBuffer = new size_t[fieldCount];
   infoFile.read((char*)dtypeBuffer, sizeof(dtype) * fieldCount);
@@ -80,24 +95,19 @@ GenRecordInfo GenRecordInfo::readInfo(std::ifstream& infoFile,
 
 size_t GenRecordInfo::getSize() { return size; }
 
-void bytesToInt8(const char* from, char* to, size_t n) {
-  memcpy(to, from, n * sizeof(char));
+Record* GenRecordInfo::allocate(size_t n) {
+  return (Record*)std::memset(new char[n * size], 0, size* n);
 }
-void bytesToInt16(const char* from, short int* to, size_t n) {
-  memcpy(to, from, n * sizeof(short int));
+void GenRecordInfo::write(Record* records, size_t n, std::ofstream& out) {
+  out.write((char*)records, n * size);
 }
-void bytesToInt32(const char* from, int* to, size_t n) {
-  memcpy(to, from, n * sizeof(int));
+void GenRecordInfo::deallocate(Record* records) { delete[] records; }
+void GenRecordInfo::field(Record record, size_t field, char*& fieldStart) {
+  fieldStart = record + fieldOffset[field];
 }
-void bytesToInt64(const char* from, long int* to, size_t n) {
-  memcpy(to, from, n * sizeof(long int));
+Record GenRecordInfo::at(Record* records, size_t i) {
+  return (Record)records + i * size;
 }
-void bytesToFloat32(const char* from, float* to, size_t n) {
-  memcpy(to, from, n * sizeof(float));
-}
-void bytesToFloat64(const char* from, double* to, size_t n) {
-  memcpy(to, from, n * sizeof(double));
-}
-void bytesToFloat96(const char* from, long double* to, size_t n) {
-  memcpy(to, from, n * sizeof(long double));
+size_t GenRecordInfo::fieldSize(size_t j) {
+  return dtypeSize[fieldType[j]] * fieldItemsCount[j];
 }
