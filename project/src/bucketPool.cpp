@@ -1,51 +1,10 @@
 
 #include "bucketPool.hpp"
-// bucket stuff
-
-void bucket::checkPos(size_t pos) {
-  if (pos >= capacity) throw std::runtime_error("position out of bounds");
-}
-
-bucket::bucket() {}
-
-bucket::bucket(size_t cap)
-    : buffer(cap, {0, 0}), available(cap, 1), capacity(cap) {}
-recordPos_t bucket::get(size_t pos) {
-  checkPos(pos);
-  return buffer[pos];
-}
-bool bucket::add(recordPos_t info) {
-  for (size_t i = 0; i < capacity; i++) {
-    if (available[i]) {
-      buffer[i] = info;
-      available[i] = false;
-      return true;
-    }
-  }
-  return false;
-}
-bool bucket::remove(size_t pos) { checkPos(pos); }
-void bucket::writeBucket(std::ofstream &os) {
-  os.write((char *)&capacity, sizeof(size_t));
-  os.write((char *)available.data(), available.size() * sizeof(bool));
-  os.write((char *)buffer.data(), buffer.size() * sizeof(recordPos_t));
-}
-
-void bucket::readBucket(std::ifstream &is) {
-  is.read((char *)&capacity, sizeof(size_t));
-  auto availableBuffer = new bool[capacity];
-  auto bufferBuffer = new recordPos_t[capacity];
-  is.read((char *)availableBuffer, capacity * sizeof(bool));
-  is.read((char *)bufferBuffer, capacity * sizeof(recordPos_t));
-  available = std::vector<bool>(availableBuffer,
-                                availableBuffer + capacity * sizeof(bool));
-  buffer = std::vector<recordPos_t>(
-      bufferBuffer, bufferBuffer + capacity * sizeof(recordPos_t));
-}
-
 // bucketPool stuff
 
-BucketPool::BucketPool(size_t poolCap, size_t bucketCap, fs::path dirname)
+template <class bucket_t>
+BucketPool<bucket_t>::BucketPool(size_t poolCap, size_t bucketCap,
+                                 fs::path dirname)
     : capacity(poolCap),
       bucketSize(bucketCap),
       pool(poolCap),
@@ -61,25 +20,29 @@ BucketPool::BucketPool(size_t poolCap, size_t bucketCap, fs::path dirname)
   if (file.is_open()) readPool(file);
 }
 
-BucketPool::~BucketPool() {
+template <class bucket_t>
+BucketPool<bucket_t>::~BucketPool() {
   std::ofstream file(poolDirName / poolFileName, std::ios::binary);
   writePool(file);
 }
 
-size_t BucketPool::tick() {
+template <class bucket_t>
+size_t BucketPool<bucket_t>::tick() {
   lock_t lock(mutex);
   clockCount = clockCount++ % capacity;
   return clockCount;
 }
 
-BucketPool::bucketId_t BucketPool::create() {
+template <class bucket_t>
+BucketPool<bucket_t>::bucketId_t BucketPool<bucket_t>::create() {
   bucketId_t nId = lastId++;
   std::ofstream file(makeBucketPath(nId));
   bucket_t bucket(bucketSize);
   bucket.writeBucket(file);
   return nId;
 }
-size_t BucketPool::evict() {
+template <class bucket_t>
+size_t BucketPool<bucket_t>::evict() {
   size_t t;
   while (true) {
     t = tick();
@@ -95,15 +58,22 @@ size_t BucketPool::evict() {
   if (dirty[t]) pool[t]->writeBucket(file);
   return t;
 }
-fs::path BucketPool::makeBucketPath(bucketId_t id) {
+template <class bucket_t>
+fs::path BucketPool<bucket_t>::makeBucketPath(
+    BucketPool<bucket_t>::bucketId_t id) {
   return poolDirName / std::to_string(id);
 }
-bool BucketPool::fetched(bucketId_t id) {
+template <class bucket_t>
+bool BucketPool<bucket_t>::fetched(bucketId_t id) {
   return idToPos.find(id) != idToPos.end();
 }
-bool BucketPool::isFull() { return idToPos.size() == capacity; }
+template <class bucket_t>
+bool BucketPool<bucket_t>::isFull() {
+  return idToPos.size() == capacity;
+}
 
-bucket_t *BucketPool::fetch(bucketId_t id) {
+template <class bucket_t>
+bucket_t *BucketPool<bucket_t>::fetch(bucketId_t id) {
   lock_t lock(mutex);
   if (fetched(id)) {
     clock[idToPos[id]] = true;
@@ -127,13 +97,15 @@ bucket_t *BucketPool::fetch(bucketId_t id) {
   idToPos[id] = pos;
   return pool[pos];
 }
-void BucketPool::writePool(std::ofstream &file) {
+template <class bucket_t>
+void BucketPool<bucket_t>::writePool(std::ofstream &file) {
   size_t lid = lastId;
   file.write((char *)&lid, sizeof(size_t));
   file.write((char *)&capacity, sizeof(size_t));
   file.write((char *)&bucketSize, sizeof(size_t));
 }
-void BucketPool::readPool(std::ifstream &file) {
+template <class bucket_t>
+void BucketPool<bucket_t>::readPool(std::ifstream &file) {
   size_t lid;
   file.read((char *)&lid, sizeof(size_t));
   file.read((char *)&capacity, sizeof(size_t));

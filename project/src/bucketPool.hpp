@@ -9,28 +9,10 @@
 #include <vector>
 
 namespace fs = std::filesystem;
-typedef struct {
-  size_t pos;
-  size_t size;
-} recordPos_t;
 
 // a buffer that holds fixed size data (position and size of a given record)
-typedef struct bucket {
-  bucket(size_t);
-  bucket();
-  recordPos_t get(size_t);
-  bool add(recordPos_t);
-  bool remove(size_t);
-  void readBucket(std::ifstream &);
-  void writeBucket(std::ofstream &);
 
- private:
-  std::vector<recordPos_t> buffer;
-  std::vector<bool> available;
-  size_t capacity;
-  void checkPos(size_t);
-} bucket_t;
-
+template <class bucket_t>
 class BucketPool {
   std::string poolFileName = "pool.info";
 
