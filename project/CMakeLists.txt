@@ -38,6 +38,16 @@ target_link_libraries(
   PRIVATE
   gtest_main
 )
+#--------------------------------BUCKET POOL------------------------------------------#
+add_executable(
+  bucketPool
+  tests/poolTest.cpp
+)
+target_link_libraries(
+  bucketPool
+  PRIVATE
+  gtest_main
+)
 #----------------------------HASH TABLE----------------------------------------------#
 add_executable(
   hashTable
@@ -61,6 +71,7 @@ target_link_libraries(
 gtest_discover_tests(hashTable)
 gtest_discover_tests(sequential)
 gtest_discover_tests(generalRecord)
+gtest_discover_tests(bucketPool)
 
 #----------------------------DEMO----------------------------------------------#
 add_executable(

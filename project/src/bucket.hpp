@@ -14,7 +14,7 @@ struct bucket {
   bucket();
   recordMeta<key_t> get(size_t);
   bool add(recordMeta<key_t>);
-  bool remove(size_t);
+  void remove(size_t);
   void readBucket(std::ifstream &);
   void writeBucket(std::ofstream &);
 

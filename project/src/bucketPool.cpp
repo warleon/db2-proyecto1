@@ -11,6 +11,8 @@ BucketPool<bucket_t>::BucketPool(size_t poolCap, size_t bucketCap,
       dirty(poolCap),
       clock(poolCap),
       poolDirName(dirname) {
+  fs::create_directories(poolDirName);
+
   for (auto &it : pool) {
     it = new bucket_t;
   }
@@ -24,6 +26,10 @@ template <class bucket_t>
 BucketPool<bucket_t>::~BucketPool() {
   std::ofstream file(poolDirName / poolFileName, std::ios::binary);
   writePool(file);
+  for (auto &it : pool) {
+    if (it) delete it;
+    it = nullptr;
+  }
 }
 
 template <class bucket_t>
@@ -34,7 +40,7 @@ size_t BucketPool<bucket_t>::tick() {
 }
 
 template <class bucket_t>
-BucketPool<bucket_t>::bucketId_t BucketPool<bucket_t>::create() {
+typename BucketPool<bucket_t>::bucketId_t BucketPool<bucket_t>::create() {
   bucketId_t nId = lastId++;
   std::ofstream file(makeBucketPath(nId));
   bucket_t bucket(bucketSize);

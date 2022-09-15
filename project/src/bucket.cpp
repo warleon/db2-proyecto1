@@ -31,8 +31,9 @@ bool bucket<key_t>::add(recordMeta<key_t> info) {
   return false;
 }
 template <typename key_t>
-bool bucket<key_t>::remove(size_t pos) {
+void bucket<key_t>::remove(size_t pos) {
   checkPos(pos);
+  available[pos] = false;
 }
 
 template <typename key_t>
