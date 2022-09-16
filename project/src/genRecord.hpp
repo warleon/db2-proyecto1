@@ -2,6 +2,7 @@
 #include <fstream>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 
@@ -83,12 +84,15 @@ class GenRecordInfo {
   void writeInfo(std::ofstream&, std::ofstream&);
 
   // list of types of every field
-  const dtypeSet_t fieldType;
+  dtypeSet_t fieldType;
 
   // number of items in the field
-  const sizeSet_t fieldItemsCount;
+  sizeSet_t fieldItemsCount;
 
   size_t getSize();
+
+  friend std::ostream& operator<<(std::ostream&, GenRecordInfo&);
+  friend std::istream& operator>>(std::istream&, GenRecordInfo&);
 
  private:
   size_t size;

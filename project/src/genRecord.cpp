@@ -111,3 +111,25 @@ Record GenRecordInfo::at(Record* records, size_t i) {
 size_t GenRecordInfo::fieldSize(size_t j) {
   return dtypeSize[fieldType[j]] * fieldItemsCount[j];
 }
+
+std::ostream& operator<<(std::ostream& os, GenRecordInfo& info) {
+  os.write((char*)&info.fieldCount, sizeof(size_t));
+  os.write((char*)info.fieldType.data(), sizeof(dtype) * info.fieldType.size());
+  os.write((char*)info.fieldItemsCount.data(),
+           sizeof(size_t) * info.fieldItemsCount.size());
+}
+std::istream& operator>>(std::istream& is, GenRecordInfo& info) {
+  size_t fieldCount = 0;
+  is.read((char*)&fieldCount, sizeof(size_t));
+  dtype* dtypeBuffer = new dtype[fieldCount];
+  size_t* sizeBuffer = new size_t[fieldCount];
+  is.read((char*)dtypeBuffer, sizeof(dtype) * fieldCount);
+  is.read((char*)sizeBuffer, sizeof(size_t) * fieldCount);
+  info.fieldCount = fieldCount;
+  info.fieldType = std::vector<dtype>(dtypeBuffer, dtypeBuffer + fieldCount);
+  info.fieldItemsCount =
+      std::vector<size_t>(sizeBuffer, sizeBuffer + fieldCount);
+
+  delete[] dtypeBuffer;
+  delete[] sizeBuffer;
+}

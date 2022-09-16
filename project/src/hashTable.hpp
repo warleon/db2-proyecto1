@@ -5,7 +5,7 @@
 #include "genRecord.hpp"
 
 // pseudocode
-
+// ----------------------------------------------------------------
 // ACCESS (given key Ko)
 // 1. Calculate K< = h(K).
 
@@ -29,6 +29,7 @@
 
 // 8. If necessary, follow the collision-resolution scheme within page P.
 
+// ----------------------------------------------------------------
 // INSERT (given (Ko, I(Ko)))
 // 1. Apply the first seven steps of ACCESS, using key Ko.
 
@@ -68,8 +69,9 @@
 // Note that the INSERT routine can (repeatedly) call itself recursively (in
 // Step 12).
 
+// ----------------------------------------------------------------
 // DELETE (given Ko)
-// 1. ACCESS, using K,,.
+// 1. ACCESS, using Ko.
 
 // 2. If K. does not appear, then stop (and send the appropriate return code).
 
@@ -78,19 +80,23 @@
 
 // 4. (Optional) If the sum of the number of entries on this page and its
 // sibling page are below the threshold, then coalesce these two pages as
-// follows: a. Copy all (K, I(K)) entries from these two pages into a temporary
-// region Q. b. Throw away (i.e. return to free space) one of the two pages.
-// Make all pointers that point to it point to the remaining page. c. Decrement
-// the depth on the remaining page P by one. d. Erase all (K, I(K)) entries on
-// page P. e. Set to zero the “number of entries on page” values associated with
-// all pointers to P. f. INSERT all (K, I(K)) pairs one at a time from the
-// temporary area Q.
+// follows:
+//  a. Copy all (K, I(K)) entries from these two pages into a temporary region
+//     Q.
+//  b. Throw away (i.e. return to free space) one of the two pages. Make all
+//     pointers that point to it point to the remaining page.
+//  c. Decrement the depth on the remaining page P by one.
+//  d. Erase all (K, I(K)) entries on page P.
+//  e. Set to zero the “number of entries on page” values associated with all
+//     pointers to P.
+//  f. INSERT all (K, I(K)) pairs one at a time from the temporary area Q.
 
 // 5. (Optional) If every pointer in the directory equals its sibling pointer,
 // then do the following:
 //   a. Decrease the depth of the directory by one.
 //   b. Halve the size of the directory, and update the pointers in the obvious
 //      manner.
+// ----------------------------------------------------------------
 
 template <class bucketPool_t>
 class ExtendibleHash {
