@@ -17,14 +17,14 @@ std::istream &operator>>(std::istream &is, recordMeta &m) {
 template <typename key_t>
 void bucket<key_t>::checkKey(key_t key) {
   if (buffer.find(key) == buffer.end())
-    throw std::runtime_error("position out of bounds");
+    throw std::runtime_error("key does not exist in this bucket");
 }
 
 template <typename key_t>
 bucket<key_t>::bucket() {}
 
 template <typename key_t>
-bucket<key_t>::bucket(size_t cap) : buffer(cap) {}
+bucket<key_t>::bucket(size_t cap) : buffer(cap), capacity(cap) {}
 
 template <typename key_t>
 recordMeta bucket<key_t>::get(key_t key) {
@@ -46,7 +46,7 @@ void bucket<key_t>::remove(key_t key) {
 template <typename key_t>
 void bucket<key_t>::writeBucket(std::ofstream &os) {
   os << capacity;
-  for (auto const &it : buffer) {
+  for (auto &it : buffer) {
     os << it.first << it.second;
   }
 }
@@ -56,8 +56,31 @@ void bucket<key_t>::readBucket(std::ifstream &is) {
   is >> capacity;
   key_t k;
   recordMeta m;
+  buffer.clear();
   for (size_t i = 0; i < capacity; i++) {
     is >> k >> m;
     buffer[k] = m;
   }
+}
+
+template <typename key_t>
+std::ostream &operator<<(std::ostream &os, bucket<key_t> &bucket) {
+  os.write((char *)&bucket.capacity, sizeof(bucket.capacity));
+  for (auto &it : bucket.buffer) {
+    os << it.first << it.second;
+  }
+  return os;
+}
+
+template <typename key_t>
+std::istream &operator>>(std::istream &is, bucket<key_t> &bucket) {
+  is >> bucket.capacity;
+  key_t k;
+  recordMeta m;
+  bucket.buffer.clear();
+  for (size_t i = 0; i < bucket.capacity; i++) {
+    is >> k >> m;
+    bucket.buffer[k] = m;
+  }
+  return is;
 }

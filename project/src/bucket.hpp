@@ -22,8 +22,12 @@ struct bucket {
 
   size_t localDegree;
 
- private:
   std::unordered_map<key_t, recordMeta> buffer;
   size_t capacity;
   void checkKey(key_t);
 };
+
+template <typename key_t>
+std::ostream &operator<<(std::ostream &, bucket<key_t> &);
+template <typename key_t>
+std::istream &operator>>(std::istream &, bucket<key_t> &);

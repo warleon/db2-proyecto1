@@ -42,6 +42,7 @@ target_link_libraries(
 add_executable(
   bucketPool
   tests/poolTest.cpp
+  src/genRecord.cpp
 )
 target_link_libraries(
   bucketPool

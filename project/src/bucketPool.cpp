@@ -44,7 +44,7 @@ typename BucketPool<bucket_t>::bucketId_t BucketPool<bucket_t>::create() {
   bucketId_t nId = lastId++;
   std::ofstream file(makeBucketPath(nId));
   bucket_t bucket(bucketSize);
-  bucket.writeBucket(file);
+  file << bucket;
   return nId;
 }
 template <class bucket_t>
@@ -61,7 +61,7 @@ size_t BucketPool<bucket_t>::evict() {
   bucketId_t id = posToId[t];
   idToPos.erase(id);
   std::ofstream file(makeBucketPath(id), std::ios::binary);
-  if (dirty[t]) pool[t]->writeBucket(file);
+  if (dirty[t]) file << *pool[t];
   return t;
 }
 template <class bucket_t>
@@ -98,7 +98,7 @@ bucket_t *BucketPool<bucket_t>::fetch(bucketId_t id) {
     pos = tick();  // as the pool is not full and this thread holds the lock the
                    // next position will be empty
 
-  pool[pos]->readBucket(file);
+  file >> *pool[pos];
   posToId[pos] = id;
   idToPos[id] = pos;
   return pool[pos];

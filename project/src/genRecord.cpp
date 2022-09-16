@@ -117,6 +117,7 @@ std::ostream& operator<<(std::ostream& os, GenRecordInfo& info) {
   os.write((char*)info.fieldType.data(), sizeof(dtype) * info.fieldType.size());
   os.write((char*)info.fieldItemsCount.data(),
            sizeof(size_t) * info.fieldItemsCount.size());
+  return os;
 }
 std::istream& operator>>(std::istream& is, GenRecordInfo& info) {
   size_t fieldCount = 0;
@@ -132,4 +133,5 @@ std::istream& operator>>(std::istream& is, GenRecordInfo& info) {
 
   delete[] dtypeBuffer;
   delete[] sizeBuffer;
+  return is;
 }
