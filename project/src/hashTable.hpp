@@ -1,126 +1,42 @@
+#pragma once
+
+#include <cmath>
 #include <fstream>
 #include <unordered_map>
 #include <vector>
 
+#include "bucket.hpp"
+#include "bucketPool.hpp"
 #include "genRecord.hpp"
 
-// pseudocode
-// ----------------------------------------------------------------
-// ACCESS (given key Ko)
-// 1. Calculate K< = h(K).
-
-// 2. Read d, the depth of the directory.
-
-// 3. Take the initial d bits of K<, interpret them as an integer base 2, and
-// call this number.
-
-// 4. ket u be the length in bytes of the region (one for each pointer in the
-// directory) that tells the numbber of entries on that leaf page. If this
-// information is not being stored in the directory then let v = 0.
-
-// 5. Find the pointer that is located r(Z + u) bytes from the start of the
-// nonheader portion of the directory, when 1 is the length of each pointer in
-// bytes.
-
-// 6. Follow this pointer to a leaf page P.
-
-// 7. Use the trailing s bits of the pseudokey to hash onto leaft page P (where
-// s is a fixed, system-determined parameter).
-
-// 8. If necessary, follow the collision-resolution scheme within page P.
-
-// ----------------------------------------------------------------
-// INSERT (given (Ko, I(Ko)))
-// 1. Apply the first seven steps of ACCESS, using key Ko.
-
-// 2. If by inserting key KO on leaf page P, we would exceed our threshold, then
-// go to Step 7.
-
-// 3. If there is sufficient free space at the location calculated at the end of
-// Step 1, then insert (Ko, I(Ko)) there.
-
-// 4. Otherwise, follow the collision-resolution scheme to insert (Ko, I(Ko)) on
-// leaf page P, if this is possible.
-
-// 5. (Optional) For each directory pointer that points to page P, increment by
-// one the entry that tells the number of entries on the leaf page.
-
-// 6. If (Ko, I(Ko)) has been successfully inserted, then stop.
-
-// 7. At this point, we know there is not sufficient free space on page P.
-// Obtain a new page P* to use as a leaf page.
-
-// 8. Obtain a temporary area Q to store all (K, I(K)) pairs that appeared on
-// page P, along with the new (Ko, I(Ko)).
-
-// 9. Set the local depth of each of P and P* to d’ + 1, where d’ is the old
-// local depth of P.
-
-// 10. Erase all nonheader information from page P.
-
-// 11. If the new local depth of P is bigger than the current directory depth,
-// then do the following. a. Increase the depth of the directory by one. b.
-// Double the size of the directory, and update the pointers in the obvious
-// manner. c. (Optional) Set to zero the entry giving the number of entries on
-// the leaf pages P and P*.
-
-// 12. INSERT all (K, I(K)) pairs one at a time from the temporary area Q.
-
-// Note that the INSERT routine can (repeatedly) call itself recursively (in
-// Step 12).
-
-// ----------------------------------------------------------------
-// DELETE (given Ko)
-// 1. ACCESS, using Ko.
-
-// 2. If K. does not appear, then stop (and send the appropriate return code).
-
-// 3. Delete by writing the deleted sign over the entry or by unchaining,
-// depending on the collision-resolution strategy.
-
-// 4. (Optional) If the sum of the number of entries on this page and its
-// sibling page are below the threshold, then coalesce these two pages as
-// follows:
-//  a. Copy all (K, I(K)) entries from these two pages into a temporary region
-//     Q.
-//  b. Throw away (i.e. return to free space) one of the two pages. Make all
-//     pointers that point to it point to the remaining page.
-//  c. Decrement the depth on the remaining page P by one.
-//  d. Erase all (K, I(K)) entries on page P.
-//  e. Set to zero the “number of entries on page” values associated with all
-//     pointers to P.
-//  f. INSERT all (K, I(K)) pairs one at a time from the temporary area Q.
-
-// 5. (Optional) If every pointer in the directory equals its sibling pointer,
-// then do the following:
-//   a. Decrease the depth of the directory by one.
-//   b. Halve the size of the directory, and update the pointers in the obvious
-//      manner.
-// ----------------------------------------------------------------
-
-template <class bucketPool_t>
 class ExtendibleHash {
   using hash_t = size_t;
-  using key_t = std::string;
-  using queryResult_t = std::vector<Record>;
+  using key_t = bucket::key_t;
+  using queryResult_t = recordMeta;
+  using pool_t = BucketPool<bucket>;
 
-  std::unordered_map<hash_t, typename bucketPool_t::bucketId_t> hashToBucket;
-  bucketPool_t pool;
-  std::string filename;
-  GenRecordInfo recordInfo;
-  size_t key_index;
+  std::string filename = "hash.info";
 
-  key_t recordToKey(Record);
+  fs::path dirName;
+  fs::path poolDirName;
+  pool_t pool;
+
+  size_t globalDepth;
+  std::vector<pool_t::bucketId_t> directory;
+
   hash_t hash(key_t);
 
  public:
-  ExtendibleHash(GenRecordInfo, size_t, bucketPool_t);
-  ExtendibleHash();
+  ExtendibleHash(fs::path, size_t, size_t);
   ~ExtendibleHash();
-  void writeIndex(std::string);
-  void readIndex(std::string);
+  friend std::ostream& operator<<(std::ostream&, ExtendibleHash&);
+  friend std::istream& operator>>(std::istream&, ExtendibleHash&);
+
+  // indexes general records with a file of GenRecords and a file with their
+  // corresponding records
+  void index(std::string, std::string);
 
   queryResult_t search(key_t);
-  key_t add(Record);
+  void add(recordMeta, key_t);
   bool remove(key_t);
 };

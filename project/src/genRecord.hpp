@@ -1,10 +1,11 @@
+#pragma once
+
 #include <cstring>
 #include <fstream>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
-
 
 enum dtype : size_t {
   int8 = 0,
@@ -47,6 +48,7 @@ class GenRecordInfo {
   GenRecordInfo(dtypeSet_t, sizeSet_t);
   GenRecordInfo(dtypeSet_t&&, sizeSet_t&&);
   GenRecordInfo(const dtype*, const size_t*, size_t);
+  GenRecordInfo();
   ~GenRecordInfo() {}
 
   // record operations
@@ -83,16 +85,16 @@ class GenRecordInfo {
   // writes the information needed to interpret the record data
   void writeInfo(std::ofstream&, std::ofstream&);
 
+  size_t getSize();
+
+  friend std::ostream& operator<<(std::ostream&, GenRecordInfo&);
+  friend std::istream& operator>>(std::istream&, GenRecordInfo&);
+
   // list of types of every field
   dtypeSet_t fieldType;
 
   // number of items in the field
   sizeSet_t fieldItemsCount;
-
-  size_t getSize();
-
-  friend std::ostream& operator<<(std::ostream&, GenRecordInfo&);
-  friend std::istream& operator>>(std::istream&, GenRecordInfo&);
 
  private:
   size_t size;

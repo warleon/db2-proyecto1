@@ -3,7 +3,7 @@
 #include <bucket.cpp>
 #include <bucketPool.cpp>
 
-using bucket_t = bucket<size_t>;
+using bucket_t = bucket;
 using pool_t = BucketPool<bucket_t>;
 
 std::string poolDir = "/data/poolTest";

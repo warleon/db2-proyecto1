@@ -35,6 +35,7 @@ void GenRecordInfo::constructorCheckConditions() {
   }
 }
 
+GenRecordInfo::GenRecordInfo() {}
 GenRecordInfo::GenRecordInfo(dtypeSet_t fixLenTypes_, sizeSet_t fixLenCount_)
     : fieldType(fixLenTypes_), fieldItemsCount(fixLenCount_) {
   constructorCheckConditions();

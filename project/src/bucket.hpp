@@ -1,4 +1,7 @@
+#pragma once
+
 #include <fstream>
+#include <string>
 #include <unordered_map>
 
 #include "genRecord.hpp"
@@ -10,8 +13,9 @@ struct recordMeta {
 
 std::ostream &operator<<(std::ostream &, recordMeta &);
 std::istream &operator>>(std::istream &, recordMeta &);
-template <typename key_t>
+
 struct bucket {
+  using key_t = std::string;
   bucket(size_t);
   bucket();
   recordMeta get(key_t);
@@ -27,7 +31,5 @@ struct bucket {
   void checkKey(key_t);
 };
 
-template <typename key_t>
-std::ostream &operator<<(std::ostream &, bucket<key_t> &);
-template <typename key_t>
-std::istream &operator>>(std::istream &, bucket<key_t> &);
+std::ostream &operator<<(std::ostream &, bucket &);
+std::istream &operator>>(std::istream &, bucket &);
