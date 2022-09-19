@@ -24,6 +24,7 @@ class ExtendibleHash {
   size_t globalDepth;
   std::vector<pool_t::bucketId_t> directory;
 
+  key_t getKey(Record, GenRecordInfo, size_t);
   hash_t keyToHash(key_t);
   size_t hashToIndex(hash_t);
   void doubleCapacity();
@@ -34,9 +35,9 @@ class ExtendibleHash {
   friend std::ostream& operator<<(std::ostream&, ExtendibleHash&);
   friend std::istream& operator>>(std::istream&, ExtendibleHash&);
 
-  // indexes general records with a file of GenRecords and a file with their
-  // corresponding records
-  void index(std::string, std::string);
+  // indexes general records with a file of GenRecords  a file with their
+  // corresponding records and the key position in the record info
+  void index(std::string, std::string, size_t);
 
   queryResult_t search(key_t);
   void add(recordMeta, key_t);

@@ -54,7 +54,8 @@ std::istream& operator>>(std::istream& is, ExtendibleHash& eh) {
 // 8. If necessary, follow the collision-resolution scheme within page P.
 // ----------------------------------------------------------------
 
-ExtendibleHash::queryResult_t ExtendibleHash::search(key_t& key) {
+ExtendibleHash::queryResult_t ExtendibleHash::search(
+    ExtendibleHash::key_t key) {
   hash_t nk = keyToHash(key);
   size_t index = hashToIndex(nk);
   bucket* buc = pool.fetch(directory[index]);
@@ -63,7 +64,7 @@ ExtendibleHash::queryResult_t ExtendibleHash::search(key_t& key) {
 
 size_t ExtendibleHash::hashToIndex(hash_t h) {
   size_t mask = ~(1 << (sizeof(size_t) - globalDepth));
-  size_t index = nk & mask;
+  size_t index = h & mask;
 }
 
 // ----------------------------------------------------------------
@@ -177,7 +178,29 @@ bool ExtendibleHash::remove(key_t key) {
   size_t index = hashToIndex(nk);
   auto oid = directory[index];
   bucket* buc = pool.fetch(oid);
-  return buc->buffer.remove(key);
+  return buc->buffer.erase(key);
 }
 
-void ExtendibleHash::index(std::string, std::string) {}
+void ExtendibleHash::index(std::string infoFile, std::string dataFile,
+                           size_t keyPos) {
+  std::ifstream info(infoFile, std::ios::binary);
+  std::ifstream data(dataFile, std::ios::binary);
+  if (!(info.good() && data.good())) throw "can't index unexisting files";
+  GenRecordInfo tempInfo;
+  size_t off = 0;
+  while (info >> tempInfo) {
+    Record* rec = tempInfo.allocate(1);
+    tempInfo.read(rec, 1, data);
+    add({off, tempInfo}, getKey(tempInfo.at(rec, 0), tempInfo, keyPos));
+    off += tempInfo.getSize();
+    tempInfo.deallocate(rec);
+  }
+}
+
+ExtendibleHash::key_t ExtendibleHash::getKey(Record rec, GenRecordInfo info,
+                                             size_t keyPos) {
+  char* field = nullptr;
+  info.field(rec, keyPos, field);
+
+  return key_t(field, field + info.fieldSize(keyPos));
+}
