@@ -11,9 +11,10 @@
 #include <vector>
 
 namespace fs = std::filesystem;
+// TODO change fetch implementation to demiss the reques of the same bucket by 2
+// different threads use thread yield
 
 // a buffer that holds fixed size data (position and size of a given record)
-
 template <class bucket_t>
 class BucketPool {
  public:

@@ -55,11 +55,15 @@ std::istream& operator>>(std::istream& is, ExtendibleHash& eh) {
 // ----------------------------------------------------------------
 
 ExtendibleHash::queryResult_t ExtendibleHash::search(key_t& key) {
-  hash_t nk = hash(key);
-  size_t mask = ~(1 << (sizeof(size_t) - globalDepth));
-  size_t index = nk & mask;
+  hash_t nk = keyToHash(key);
+  size_t index = hashToIndex(nk);
   bucket* buc = pool.fetch(directory[index]);
   return buc->buffer[key];
+}
+
+size_t ExtendibleHash::hashToIndex(hash_t h) {
+  size_t mask = ~(1 << (sizeof(size_t) - globalDepth));
+  size_t index = nk & mask;
 }
 
 // ----------------------------------------------------------------
@@ -107,10 +111,8 @@ ExtendibleHash::queryResult_t ExtendibleHash::search(key_t& key) {
 // ----------------------------------------------------------------
 
 void ExtendibleHash::add(recordMeta meta, key_t key) {
-  hash_t nk = hash(key);
-  size_t mask =
-      ~(1 << (sizeof(size_t) - globalDepth));  // may be wrong possible bug
-  size_t index = nk & mask;
+  hash_t nk = keyToHash(key);
+  size_t index = hashToIndex(nk);
   auto oid = directory[index];
   bucket* buc = pool.fetch(oid);
   if (buc->add(key, meta)) return;
@@ -170,6 +172,12 @@ void ExtendibleHash::doubleCapacity() {
 //      manner.
 // ----------------------------------------------------------------
 
-bool ExtendibleHash::remove(key_t) {}
+bool ExtendibleHash::remove(key_t key) {
+  hash_t nk = keyToHash(key);
+  size_t index = hashToIndex(nk);
+  auto oid = directory[index];
+  bucket* buc = pool.fetch(oid);
+  return buc->buffer.remove(key);
+}
 
 void ExtendibleHash::index(std::string, std::string) {}

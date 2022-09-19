@@ -24,7 +24,8 @@ class ExtendibleHash {
   size_t globalDepth;
   std::vector<pool_t::bucketId_t> directory;
 
-  hash_t hash(key_t);
+  hash_t keyToHash(key_t);
+  size_t hashToIndex(hash_t);
   void doubleCapacity();
 
  public:
