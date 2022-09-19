@@ -6,7 +6,7 @@
 using bucket_t = bucket;
 using pool_t = BucketPool<bucket_t>;
 
-std::string poolDir = "/data/poolTest";
+std::string poolDir = "/data/tests/poolTest";
 
 TEST(BucketPool, constructorTest_0) { pool_t pool(1000, 10, poolDir); }
 TEST(BucketPool, createTest_0) {
