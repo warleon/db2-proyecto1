@@ -7,7 +7,7 @@
 
 const std::string infoFilePath = "/data/tests/info.info";
 const std::string dataFilePath = "/data/tests/data.data";
-const fs::path hashHome("/data/index");
+const fs::path hashHome("/data/tests/index");
 
 dtype types[2] = {dtype::int8, dtype::int32};
 size_t sizes[2] = {5, 5};
