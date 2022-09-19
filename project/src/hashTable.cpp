@@ -63,8 +63,11 @@ ExtendibleHash::queryResult_t ExtendibleHash::search(
 }
 
 size_t ExtendibleHash::hashToIndex(hash_t h) {
-  size_t mask = ~(1 << (sizeof(size_t) - globalDepth));
-  size_t index = h & mask;
+  size_t mask = 0;
+  mask -= 1;
+  mask = mask >> globalDepth;
+  mask = ~mask;
+  return (h & mask) >> (sizeof(hash_t) - globalDepth);
 }
 
 // ----------------------------------------------------------------
@@ -123,6 +126,7 @@ void ExtendibleHash::add(recordMeta meta, key_t key) {
   nbuc->localDeph = buc->localDeph;
   auto buff = std::move(buc->buffer);
   if (buc->localDeph > globalDepth) doubleCapacity();
+  // TODO else handle insertion of new bucket
   size_t nbindex =
       directory[index << 1] == oid ? (index << 1) : (index << 1) + 1;
   directory[nbindex] = nid;
