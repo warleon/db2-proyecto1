@@ -24,7 +24,7 @@ struct bucket {
   void readBucket(std::ifstream &);
   void writeBucket(std::ofstream &);
 
-  size_t localDegree;
+  size_t localDeph;
 
   std::unordered_map<key_t, recordMeta> buffer;
   size_t capacity;

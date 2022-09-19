@@ -25,6 +25,7 @@ class ExtendibleHash {
   std::vector<pool_t::bucketId_t> directory;
 
   hash_t hash(key_t);
+  void doubleCapacity();
 
  public:
   ExtendibleHash(fs::path, size_t, size_t);

@@ -21,7 +21,7 @@ void bucket::checkKey(key_t key) {
 
 bucket::bucket() {}
 
-bucket::bucket(size_t cap) : buffer(cap), capacity(cap) {}
+bucket::bucket(size_t cap) : buffer(cap), capacity(cap), localDeph(0) {}
 
 recordMeta bucket::get(key_t key) {
   checkKey(key);

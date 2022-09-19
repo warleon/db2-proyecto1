@@ -92,9 +92,11 @@ ExtendibleHash::queryResult_t ExtendibleHash::search(key_t& key) {
 // 10. Erase all nonheader information from page P.
 
 // 11. If the new local depth of P is bigger than the current directory depth,
-// then do the following. a. Increase the depth of the directory by one. b.
-// Double the size of the directory, and update the pointers in the obvious
-// manner. c. (Optional) Set to zero the entry giving the number of entries on
+// then do the following.
+// a. Increase the depth of the directory by one.
+// b. Double the size of the directory, and update the pointers in the obvious
+// manner.
+// c. (Optional) Set to zero the entry giving the number of entries on
 // the leaf pages P and P*.
 
 // 12. INSERT all (K, I(K)) pairs one at a time from the temporary area Q.
@@ -106,13 +108,37 @@ ExtendibleHash::queryResult_t ExtendibleHash::search(key_t& key) {
 
 void ExtendibleHash::add(recordMeta meta, key_t key) {
   hash_t nk = hash(key);
-  size_t mask = ~(1 << (sizeof(size_t) - globalDepth));
+  size_t mask =
+      ~(1 << (sizeof(size_t) - globalDepth));  // may be wrong possible bug
   size_t index = nk & mask;
-  bucket* buc = pool.fetch(directory[index]);
-  if (buc->add(key, meta)) {
-    return;
+  auto oid = directory[index];
+  bucket* buc = pool.fetch(oid);
+  if (buc->add(key, meta)) return;
+  buc->localDeph++;
+  pool_t::bucketId_t nid = pool.create();
+  bucket* nbuc = pool.fetch(nid);
+  nbuc->localDeph = buc->localDeph;
+  auto buff = std::move(buc->buffer);
+  if (buc->localDeph > globalDepth) doubleCapacity();
+  size_t nbindex =
+      directory[index << 1] == oid ? (index << 1) : (index << 1) + 1;
+  directory[nbindex] = nid;
+
+  add(meta, key);
+  for (auto& it : buff) {
+    add(it.second, it.first);
   }
-  // continue to handle splits:
+}
+
+void ExtendibleHash::doubleCapacity() {
+  globalDepth = globalDepth << 1;
+  auto temp = std::move(directory);
+  directory.resize(2 << globalDepth);
+  for (auto& it : temp) {
+    for (size_t i = 0; i < 2; i++) {
+      directory.push_back(it);
+    }
+  }
 }
 
 // ----------------------------------------------------------------
