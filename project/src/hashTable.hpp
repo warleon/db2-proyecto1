@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "bucket.hpp"
-#include "bucketPool.hpp"
+#include "bucketPool.cpp"
 #include "genRecord.hpp"
 
 class ExtendibleHash {
@@ -25,12 +25,12 @@ class ExtendibleHash {
   std::vector<pool_t::bucketId_t> directory;
 
   key_t getKey(Record, GenRecordInfo, size_t);
-  hash_t keyToHash(key_t);
+  std::hash<key_t> keyToHash;
   size_t hashToIndex(hash_t);
   void doubleCapacity();
 
  public:
-  ExtendibleHash(fs::path, size_t, size_t);
+  ExtendibleHash(fs::path home, size_t bucketSize = 32, size_t poolSize = 1024);
   ~ExtendibleHash();
   friend std::ostream& operator<<(std::ostream&, ExtendibleHash&);
   friend std::istream& operator>>(std::istream&, ExtendibleHash&);

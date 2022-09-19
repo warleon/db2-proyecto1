@@ -7,6 +7,7 @@ BucketPool<bucket_t>::BucketPool(size_t poolCap, size_t bucketCap,
                                  fs::path dirname)
     : capacity(poolCap),
       bucketSize(bucketCap),
+      clockCount(0),
       pool(poolCap),
       dirty(poolCap),
       clock(poolCap),
@@ -35,7 +36,8 @@ BucketPool<bucket_t>::~BucketPool() {
 template <class bucket_t>
 size_t BucketPool<bucket_t>::tick() {
   lock_t lock(mutex);
-  clockCount = clockCount++ % capacity;
+  clockCount++;
+  clockCount %= capacity;
   return clockCount;
 }
 
