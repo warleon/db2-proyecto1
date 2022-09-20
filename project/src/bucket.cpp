@@ -14,45 +14,37 @@ std::istream &operator>>(std::istream &is, recordMeta &m) {
 
 // bucket stuff
 
-template <typename key_t>
-void bucket<key_t>::checkKey(key_t key) {
+void bucket::checkKey(key_t key) {
   if (buffer.find(key) == buffer.end())
     throw std::runtime_error("key does not exist in this bucket");
 }
 
-template <typename key_t>
-bucket<key_t>::bucket() {}
+bucket::bucket() {}
 
-template <typename key_t>
-bucket<key_t>::bucket(size_t cap) : buffer(cap), capacity(cap) {}
+bucket::bucket(size_t cap) : localDeph(0), buffer(cap), capacity(cap) {}
 
-template <typename key_t>
-recordMeta bucket<key_t>::get(key_t key) {
+recordMeta bucket::get(key_t key) {
   checkKey(key);
   return buffer[key];
 }
-template <typename key_t>
-bool bucket<key_t>::add(key_t key, recordMeta info) {
+bool bucket::add(key_t key, recordMeta info) {
   if (buffer.size() == capacity) return false;
   buffer[key] = info;
   return true;
 }
-template <typename key_t>
-void bucket<key_t>::remove(key_t key) {
+void bucket::remove(key_t key) {
   checkKey(key);
   buffer.erase(key);
 }
 
-template <typename key_t>
-void bucket<key_t>::writeBucket(std::ofstream &os) {
+void bucket::writeBucket(std::ofstream &os) {
   os << capacity;
   for (auto &it : buffer) {
     os << it.first << it.second;
   }
 }
 
-template <typename key_t>
-void bucket<key_t>::readBucket(std::ifstream &is) {
+void bucket::readBucket(std::ifstream &is) {
   is >> capacity;
   key_t k;
   recordMeta m;
@@ -63,24 +55,32 @@ void bucket<key_t>::readBucket(std::ifstream &is) {
   }
 }
 
-template <typename key_t>
-std::ostream &operator<<(std::ostream &os, bucket<key_t> &bucket) {
+std::ostream &operator<<(std::ostream &os, bucket &bucket) {
   os.write((char *)&bucket.capacity, sizeof(bucket.capacity));
+  size_t s = bucket.buffer.size();
+  os.write((char *)&s, sizeof(s));
   for (auto &it : bucket.buffer) {
+    auto ks = bucket.buffer.size();
+    os.write((char *)&ks, sizeof(ks));
     os << it.first << it.second;
   }
   return os;
 }
 
-template <typename key_t>
-std::istream &operator>>(std::istream &is, bucket<key_t> &bucket) {
-  is >> bucket.capacity;
-  key_t k;
+std::istream &operator>>(std::istream &is, bucket &buc) {
+  is.read((char *)&buc.capacity, sizeof(buc.capacity));
+  size_t s;
+  is.read((char *)&s, sizeof(s));
   recordMeta m;
-  bucket.buffer.clear();
-  for (size_t i = 0; i < bucket.capacity; i++) {
-    is >> k >> m;
-    bucket.buffer[k] = m;
+  buc.buffer.clear();
+  for (size_t i = 0; i < s; i++) {
+    size_t ks;
+    is.read((char *)&ks, sizeof(ks));
+    char *key = new char[ks];
+    is.read(key, ks);
+    is >> m;
+    buc.buffer[bucket::key_t(key, key + ks)] = m;
+    delete[] key;
   }
   return is;
 }

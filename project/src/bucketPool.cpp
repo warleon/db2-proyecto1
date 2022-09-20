@@ -1,25 +1,27 @@
 
 #include "bucketPool.hpp"
-// bucketPool stuff
+
+#include <sstream>
 
 template <class bucket_t>
 BucketPool<bucket_t>::BucketPool(size_t poolCap, size_t bucketCap,
                                  fs::path dirname)
     : capacity(poolCap),
       bucketSize(bucketCap),
+      clockCount(0),
       pool(poolCap),
       dirty(poolCap),
       clock(poolCap),
       poolDirName(dirname) {
   fs::create_directories(poolDirName);
-
-  for (auto &it : pool) {
-    it = new bucket_t;
-  }
   // check for previus runs
   fs::path meta(poolDirName / poolFileName);
   std::ifstream file(meta, std::ios::binary);
   if (file.is_open()) readPool(file);
+  // populate the pool
+  for (auto &it : pool) {
+    it = new bucket_t(bucketSize);
+  }
 }
 
 template <class bucket_t>
@@ -35,7 +37,8 @@ BucketPool<bucket_t>::~BucketPool() {
 template <class bucket_t>
 size_t BucketPool<bucket_t>::tick() {
   lock_t lock(mutex);
-  clockCount = clockCount++ % capacity;
+  clockCount++;
+  clockCount %= capacity;
   return clockCount;
 }
 
@@ -87,9 +90,12 @@ bucket_t *BucketPool<bucket_t>::fetch(bucketId_t id) {
   }
 
   std::ifstream file(makeBucketPath(id), std::ios::binary);
-  if (!file.good())
-    throw std::runtime_error(
-        "can't open file to fetch bucket at BucketPool::fetch");
+  if (!file.good()) {
+    std::stringstream ss;
+    ss << "can't open file to fetch bucket with id " << id
+       << " at BucketPool::fetch";
+    throw std::runtime_error(ss.str());
+  }
 
   size_t pos;
   if (isFull())

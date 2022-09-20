@@ -4,9 +4,9 @@
 #include <genRecord.hpp>
 #include <utility>
 
-const std::string metaFilePath = "/data/info.meta";
-const std::string infoFilePath = "/data/info.info";
-const std::string dataFilePath = "/data/data.data";
+const std::string metaFilePath = "/data/tests/info.meta";
+const std::string infoFilePath = "/data/tests/info.info";
+const std::string dataFilePath = "/data/tests/data.data";
 
 dtype types[7] = {dtype::int8,    dtype::int16,   dtype::int32,  dtype::int64,
                   dtype::float32, dtype::float64, dtype::float96};

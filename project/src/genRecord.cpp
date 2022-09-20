@@ -1,6 +1,7 @@
 #include "genRecord.hpp"
 
 #include <exception>
+#include <iostream>
 #include <utility>
 
 void bytesToInt8(const char* from, char* to, size_t n) {
@@ -35,6 +36,7 @@ void GenRecordInfo::constructorCheckConditions() {
   }
 }
 
+GenRecordInfo::GenRecordInfo() {}
 GenRecordInfo::GenRecordInfo(dtypeSet_t fixLenTypes_, sizeSet_t fixLenCount_)
     : fieldType(fixLenTypes_), fieldItemsCount(fixLenCount_) {
   constructorCheckConditions();
@@ -52,16 +54,28 @@ GenRecordInfo::GenRecordInfo(dtypeSet_t&& fixLenTypes_,
 GenRecordInfo::GenRecordInfo(const dtype* dtypeBuffer, const size_t* sizeBuffer,
                              size_t fieldCount_)
     : fieldType(dtypeBuffer, dtypeBuffer + fieldCount_),
-      fieldItemsCount(sizeBuffer, sizeBuffer + fieldCount_) {
+      fieldItemsCount(sizeBuffer, sizeBuffer + fieldCount_),
+      fieldCount(fieldCount_) {
   constructorCheckConditions();
-  fieldCount = fieldItemsCount.size();
+  // fieldCount = fieldItemsCount.size();
   computeSizeAndOffsets();
 }
 
 void GenRecordInfo::computeSizeAndOffsets() {
+  std::cerr << "fieldCount at computeSizeAndOffsets |" << fieldCount
+            << std::endl;
+  std::cerr << "fieldType size at computeSizeAndOffsets |" << fieldType.size()
+            << std::endl;
+  std::cerr << "fielditemscount size at computesizeandoffsets |"
+            << fieldItemsCount.size() << std::endl;
   fieldOffset.resize(fieldCount);
   fieldOffset[0] = 0;
+  std::cerr << "set value 0 to 0" << std::endl;
   for (size_t i = 1; i < fieldCount; i++) {
+    std::cerr << "i equals to " << i << std::endl;
+    std::cerr << "current type equals to " << fieldType[i - 1] << std::endl;
+    std::cerr << "current type size equals to " << dtypeSize[fieldType[i - 1]]
+              << std::endl;
     fieldOffset[i] = fieldOffset[i - 1] +
                      dtypeSize[fieldType[i - 1]] * fieldItemsCount[i - 1];
   }
@@ -105,31 +119,37 @@ void GenRecordInfo::deallocate(Record* records) { delete[] records; }
 void GenRecordInfo::field(Record record, size_t field, char*& fieldStart) {
   fieldStart = record + fieldOffset[field];
 }
+char* GenRecordInfo::field(Record record, size_t field) {
+  return record + fieldOffset[field];
+}
+
 Record GenRecordInfo::at(Record* records, size_t i) {
-  return (Record)records + i * size;
+  return ((Record)records) + i * size;
 }
 size_t GenRecordInfo::fieldSize(size_t j) {
   return dtypeSize[fieldType[j]] * fieldItemsCount[j];
 }
 
 std::ostream& operator<<(std::ostream& os, GenRecordInfo& info) {
-  os.write((char*)&info.fieldCount, sizeof(size_t));
-  os.write((char*)info.fieldType.data(), sizeof(dtype) * info.fieldType.size());
+  os.write((char*)&info.fieldCount, sizeof(info.fieldCount));
+  os.write((char*)info.fieldType.data(), sizeof(dtype) * info.fieldCount);
   os.write((char*)info.fieldItemsCount.data(),
-           sizeof(size_t) * info.fieldItemsCount.size());
+           sizeof(size_t) * info.fieldCount);
+
   return os;
 }
 std::istream& operator>>(std::istream& is, GenRecordInfo& info) {
-  size_t fieldCount = 0;
-  is.read((char*)&fieldCount, sizeof(size_t));
-  dtype* dtypeBuffer = new dtype[fieldCount];
-  size_t* sizeBuffer = new size_t[fieldCount];
-  is.read((char*)dtypeBuffer, sizeof(dtype) * fieldCount);
-  is.read((char*)sizeBuffer, sizeof(size_t) * fieldCount);
-  info.fieldCount = fieldCount;
-  info.fieldType = std::vector<dtype>(dtypeBuffer, dtypeBuffer + fieldCount);
+  is.read((char*)&info.fieldCount, sizeof(info.fieldCount));
+  dtype* dtypeBuffer = new dtype[info.fieldCount]{};
+  size_t* sizeBuffer = new size_t[info.fieldCount]{};
+  is.read((char*)dtypeBuffer, sizeof(dtype) * info.fieldCount);
+  is.read((char*)sizeBuffer, sizeof(size_t) * info.fieldCount);
+  info.fieldType =
+      std::vector<dtype>(dtypeBuffer, dtypeBuffer + info.fieldCount);
   info.fieldItemsCount =
-      std::vector<size_t>(sizeBuffer, sizeBuffer + fieldCount);
+      std::vector<size_t>(sizeBuffer, sizeBuffer + info.fieldCount);
+  info.constructorCheckConditions();
+  info.computeSizeAndOffsets();
 
   delete[] dtypeBuffer;
   delete[] sizeBuffer;

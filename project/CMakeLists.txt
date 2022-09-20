@@ -53,6 +53,9 @@ target_link_libraries(
 add_executable(
   hashTable
   tests/hashTableTest.cpp
+  src/hashTable.cpp
+  src/bucket.cpp
+  src/genRecord.cpp
 )
 target_link_libraries(
   hashTable
