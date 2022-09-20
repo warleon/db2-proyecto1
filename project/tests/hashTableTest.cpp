@@ -76,6 +76,23 @@ TEST(HashTable, searchTest_0) {
   info.deallocate(recs);
 }
 
-TEST(HashTable, rangeSearchTest_0) {}
-
-TEST(HashTable, removeTest_0) {}
+TEST(HashTable, removeTest_0) {
+  ExtendibleHash index(hashHome / "test1");
+  auto recs = info.allocate(1);
+  setData(info.at(recs, 0), info);
+  auto key = index.getKey(info.at(recs, 0), info, 1);
+  info.deallocate(recs);
+  EXPECT_NO_THROW(index.remove(key));
+}
+TEST(HashTable, removeTest_1) {
+  ExtendibleHash index(hashHome / "test1");
+  auto recs = info.allocate(1);
+  setData(info.at(recs, 0), info);
+  auto key = index.getKey(info.at(recs, 0), info, 1);
+  info.deallocate(recs);
+  EXPECT_ANY_THROW(index.remove(key));
+}
+TEST(HashTable, resizeTest_0) {
+  // TODO insert a lot of key-values to the index
+  // to force it to resize
+}

@@ -43,5 +43,5 @@ class ExtendibleHash {
 
   queryResult_t search(key_t);
   void add(recordMeta, key_t);
-  bool remove(key_t);
+  void remove(key_t);
 };

@@ -33,8 +33,8 @@ bool bucket::add(key_t key, recordMeta info) {
   return true;
 }
 void bucket::remove(key_t key) {
-  checkKey(key);
-  buffer.erase(key);
+  if (!buffer.erase(key))
+    throw std::runtime_error("key not found at bucket::remove");
 }
 
 std::ostream &operator<<(std::ostream &os, bucket &bucket) {

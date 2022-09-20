@@ -99,12 +99,13 @@ void ExtendibleHash::doubleCapacity() {
   }
 }
 
-bool ExtendibleHash::remove(key_t key) {
+void ExtendibleHash::remove(key_t key) {
   hash_t nk = keyToHash(key);
   size_t index = hashToIndex(nk);
   auto oid = directory[index];
   bucket* buc = pool.fetch(oid);
-  return buc->buffer.erase(key);
+  buc->remove(key);
+  pool.setDirty(oid);
 }
 
 void ExtendibleHash::index(std::string infoFile, std::string dataFile,
