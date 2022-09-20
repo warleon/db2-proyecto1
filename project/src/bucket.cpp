@@ -42,7 +42,7 @@ std::ostream &operator<<(std::ostream &os, bucket &bucket) {
   size_t s = bucket.buffer.size();
   os.write((char *)&s, sizeof(s));
   for (auto &it : bucket.buffer) {
-    auto ks = bucket.buffer.size();
+    auto ks = it.first.size();
     os.write((char *)&ks, sizeof(ks));
     os << it.first << it.second;
   }
