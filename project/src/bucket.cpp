@@ -28,31 +28,13 @@ recordMeta bucket::get(key_t key) {
   return buffer[key];
 }
 bool bucket::add(key_t key, recordMeta info) {
-  if (buffer.size() == capacity) return false;
+  if (buffer.size() >= capacity) return false;
   buffer[key] = info;
   return true;
 }
 void bucket::remove(key_t key) {
   checkKey(key);
   buffer.erase(key);
-}
-
-void bucket::writeBucket(std::ofstream &os) {
-  os << capacity;
-  for (auto &it : buffer) {
-    os << it.first << it.second;
-  }
-}
-
-void bucket::readBucket(std::ifstream &is) {
-  is >> capacity;
-  key_t k;
-  recordMeta m;
-  buffer.clear();
-  for (size_t i = 0; i < capacity; i++) {
-    is >> k >> m;
-    buffer[k] = m;
-  }
 }
 
 std::ostream &operator<<(std::ostream &os, bucket &bucket) {

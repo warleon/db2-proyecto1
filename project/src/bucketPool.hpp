@@ -47,6 +47,9 @@ class BucketPool {
   // creates a new bucket in the filesystem returns the bucket id
   bucketId_t create();
 
+  // indicates that the pos bucket is modified and has to be write to disk
+  void setDirty(bucketId_t id);
+
  private:
   // checks if id exists in the pool
   bool fetched(bucketId_t);

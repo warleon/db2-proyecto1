@@ -62,20 +62,9 @@ GenRecordInfo::GenRecordInfo(const dtype* dtypeBuffer, const size_t* sizeBuffer,
 }
 
 void GenRecordInfo::computeSizeAndOffsets() {
-  std::cerr << "fieldCount at computeSizeAndOffsets |" << fieldCount
-            << std::endl;
-  std::cerr << "fieldType size at computeSizeAndOffsets |" << fieldType.size()
-            << std::endl;
-  std::cerr << "fielditemscount size at computesizeandoffsets |"
-            << fieldItemsCount.size() << std::endl;
   fieldOffset.resize(fieldCount);
   fieldOffset[0] = 0;
-  std::cerr << "set value 0 to 0" << std::endl;
   for (size_t i = 1; i < fieldCount; i++) {
-    std::cerr << "i equals to " << i << std::endl;
-    std::cerr << "current type equals to " << fieldType[i - 1] << std::endl;
-    std::cerr << "current type size equals to " << dtypeSize[fieldType[i - 1]]
-              << std::endl;
     fieldOffset[i] = fieldOffset[i - 1] +
                      dtypeSize[fieldType[i - 1]] * fieldItemsCount[i - 1];
   }
