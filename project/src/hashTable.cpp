@@ -29,6 +29,7 @@ std::istream& operator>>(std::istream& is, ExtendibleHash& eh) {
   is.read((char*)buffer, sizeof(ExtendibleHash::pool_t::bucketId_t) * size);
   eh.directory =
       std::vector<ExtendibleHash::pool_t::bucketId_t>(buffer, buffer + size);
+  delete[] buffer;
   return is;
 }
 

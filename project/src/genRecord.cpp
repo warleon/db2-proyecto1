@@ -107,7 +107,7 @@ void GenRecordInfo::field(Record record, size_t field, char*& fieldStart) {
   fieldStart = record + fieldOffset[field];
 }
 Record GenRecordInfo::at(Record* records, size_t i) {
-  return (Record)records + i * size;
+  return ((Record)records) + i * size;
 }
 size_t GenRecordInfo::fieldSize(size_t j) {
   return dtypeSize[fieldType[j]] * fieldItemsCount[j];
