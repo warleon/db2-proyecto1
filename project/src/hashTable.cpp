@@ -61,37 +61,37 @@ size_t ExtendibleHash::hashToIndex(hash_t h) {
 
 void ExtendibleHash::add(recordMeta meta, key_t key) {
   static size_t addcount = 0;
-  std::cerr << "start adding val number " << addcount++ << std::endl;
+  std::cerr << "start adding val number " << ++addcount << std::endl;
   hash_t nk = keyToHash(key);
-  std::cerr << "key hashed " << nk << std::endl;
+  //// std::cerr << "key hashed " << nk << std::endl;
   size_t index = hashToIndex(nk);
-  std::cerr << "hash converted to index " << index << std::endl;
+  //// std::cerr << "hash converted to index " << index << std::endl;
   auto oid = directory[index];
-  std::cerr << "bucket id retrieved " << oid << std::endl;
+  //// std::cerr << "bucket id retrieved " << oid << std::endl;
   bucket* buc = pool.fetch(oid);
-  std::cerr << "bucket fetched ptr = " << (void*)buc << std::endl;
+  //// std::cerr << "bucket fetched ptr = " << (void*)buc << std::endl;
   if (buc->add(key, meta)) {
-    std::cerr << "val succesfully added " << addcount << std::endl;
+    //// std::cerr << "val succesfully added " << addcount << std::endl;
     return;
   }
-  std::cerr << "Bucket full need to split" << std::endl;
+  //// std::cerr << "Bucket full need to split" << std::endl;
   buc->localDeph++;
-  std::cerr << "increaced bucket local depth" << std::endl;
+  //// std::cerr << "increaced bucket local depth" << std::endl;
   pool_t::bucketId_t nid = pool.create();
   bucket* nbuc = pool.fetch(nid);
   nbuc->localDeph = buc->localDeph;
-  std::cerr << "created new bucket" << std::endl;
+  //// std::cerr << "created new bucket" << std::endl;
   auto buff = std::move(buc->buffer);
   if (buc->localDeph > globalDepth) {
-    std::cerr << "have to resize th edirectory" << std::endl;
+    //// std::cerr << "have to resize th edirectory" << std::endl;
     doubleCapacity();
     size_t nbindex =  // TODO fix index calculation
         directory[index << 1] == oid ? (index << 1) : (index << 1) + 1;
     directory[nbindex] = nid;
   } else {
     // TODO else handle insertion of new bucket
-    std::cerr << "panic bucket split without resize not implemented"
-              << std::endl;
+    // std::cerr << "panic bucket split without resize not implemented"
+    // << std::endl;
   }
 
   add(meta, key);
@@ -128,8 +128,8 @@ void ExtendibleHash::index(std::string infoFile, std::string dataFile,
     throw std::runtime_error("can't index unexisting files");
   GenRecordInfo tempInfo;
   size_t off = 0;
-  while (info.good()) {
-    info >> tempInfo;
+  while (info >> tempInfo) {
+    if (!info.good()) break;
     Record* rec = tempInfo.allocate(1);
     tempInfo.read(rec, 1, data);
     add({off, tempInfo}, getKey(tempInfo.at(rec, 0), tempInfo, keyPos));
