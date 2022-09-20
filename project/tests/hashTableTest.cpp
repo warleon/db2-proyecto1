@@ -3,11 +3,12 @@
 #include <fstream>
 #include <genRecord.hpp>
 #include <hashTable.hpp>
+#include <iostream>
 #include <utility>
 
-const std::string infoFilePath = "/data/tests/info.info";
-const std::string dataFilePath = "/data/tests/data.data";
-const fs::path hashHome("/data/tests/index");
+const fs::path hashHome("/data/tests/hashTest/index");
+const fs::path infoFilePath = hashHome / "info.info";
+const fs::path dataFilePath = hashHome / "data.dat";
 
 dtype types[2] = {dtype::int8, dtype::int32};
 size_t sizes[2] = {5, 5};
@@ -29,10 +30,13 @@ TEST(HashTable, constructorTest_0) {
 TEST(HashTable, indexTest_0) {
   ExtendibleHash index(hashHome / "test0");
   auto recs = info.allocate(2);
+  std::cerr << "recs at test0 " << (void*)recs << std::endl;
   setData(info.at(recs, 0), info);
   setData(info.at(recs, 1), info);
   std::ofstream data(dataFilePath, std::ios::binary);
-  std::ofstream infoOut(dataFilePath, std::ios::binary);
+  EXPECT_TRUE(data.good()) << data.rdstate();
+  std::ofstream infoOut(infoFilePath, std::ios::binary);
+  EXPECT_TRUE(infoOut.good()) << infoOut.rdstate();
   info.write(recs, 2, data);
   infoOut << info << info;
   infoOut.close();
@@ -43,10 +47,13 @@ TEST(HashTable, indexTest_0) {
 TEST(HashTable, indexTest_1) {
   ExtendibleHash index(hashHome / "test1");
   auto recs = info.allocate(2);
+  std::cerr << "recs at test1 " << (void*)recs << std::endl;
   setData(info.at(recs, 0), info);
   setData(info.at(recs, 1), info);
   std::ofstream data(dataFilePath, std::ios::binary);
-  std::ofstream infoOut(dataFilePath, std::ios::binary);
+  EXPECT_TRUE(data.good()) << data.rdstate();
+  std::ofstream infoOut(infoFilePath, std::ios::binary);
+  EXPECT_TRUE(infoOut.good()) << infoOut.rdstate();
   info.write(recs, 2, data);
   infoOut << info << info;
   infoOut.close();

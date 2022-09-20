@@ -69,6 +69,7 @@ class GenRecordInfo {
 
   // gets a reference to the n field of the record
   void field(Record, size_t, char*&);
+  char* field(Record, size_t);
 
   // gets the size of the field in bytes
   size_t fieldSize(size_t);

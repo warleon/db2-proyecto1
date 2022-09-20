@@ -57,20 +57,30 @@ void bucket::readBucket(std::ifstream &is) {
 
 std::ostream &operator<<(std::ostream &os, bucket &bucket) {
   os.write((char *)&bucket.capacity, sizeof(bucket.capacity));
+  size_t s = bucket.buffer.size();
+  os.write((char *)&s, sizeof(s));
   for (auto &it : bucket.buffer) {
+    auto ks = bucket.buffer.size();
+    os.write((char *)&ks, sizeof(ks));
     os << it.first << it.second;
   }
   return os;
 }
 
 std::istream &operator>>(std::istream &is, bucket &buc) {
-  is >> buc.capacity;
-  bucket::key_t k;
+  is.read((char *)&buc.capacity, sizeof(buc.capacity));
+  size_t s;
+  is.read((char *)&s, sizeof(s));
   recordMeta m;
   buc.buffer.clear();
-  for (size_t i = 0; i < buc.capacity; i++) {
-    is >> k >> m;
-    buc.buffer[k] = m;
+  for (size_t i = 0; i < s; i++) {
+    size_t ks;
+    is.read((char *)&ks, sizeof(ks));
+    char *key = new char[ks];
+    is.read(key, ks);
+    is >> m;
+    buc.buffer[bucket::key_t(key, key + ks)] = m;
+    delete[] key;
   }
   return is;
 }
