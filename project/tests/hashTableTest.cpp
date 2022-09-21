@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <cstring>
+#include <csvReader.hpp>
 #include <fstream>
 #include <genRecord.hpp>
 #include <hashTable.hpp>
@@ -10,6 +11,7 @@
 const fs::path hashHome("/data/tests/hashTest/index");
 const fs::path infoFilePath = hashHome / "info.info";
 const fs::path dataFilePath = hashHome / "data.dat";
+const fs::path csvPath = "/data/forbesathletesv2.csv";
 
 dtype types[2] = {dtype::int8, dtype::int32};
 size_t sizes[2] = {5, 5};
@@ -95,4 +97,5 @@ TEST(HashTable, removeTest_1) {
 TEST(HashTable, resizeTest_0) {
   // TODO insert a lot of key-values to the index
   // to force it to resize
+  CSV reader(csvPath);
 }

@@ -56,6 +56,7 @@ add_executable(
   src/hashTable.cpp
   src/bucket.cpp
   src/genRecord.cpp
+  src/csvReader.cpp
 )
 target_link_libraries(
   hashTable
