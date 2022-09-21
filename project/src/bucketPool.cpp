@@ -28,9 +28,17 @@ template <class bucket_t>
 BucketPool<bucket_t>::~BucketPool() {
   std::ofstream file(poolDirName / poolFileName, std::ios::binary);
   writePool(file);
-  for (auto &it : pool) {
-    if (it) delete it;
-    it = nullptr;
+  for (size_t i = 0; i < pool.size(); i++) {
+    auto &it = pool[i];
+    if (it) {
+      if (dirty[i]) {
+        auto id = posToId[i];
+        std::ofstream file(makeBucketPath(id), std::ios::binary);
+        file << *pool[i];
+      }
+      delete it;
+      it = nullptr;
+    }
   }
 }
 
@@ -123,4 +131,14 @@ void BucketPool<bucket_t>::readPool(std::ifstream &file) {
   file.read((char *)&capacity, sizeof(size_t));
   file.read((char *)&bucketSize, sizeof(size_t));
   lastId = lid;
+}
+
+template <class bucket_t>
+void BucketPool<bucket_t>::setDirty(BucketPool<bucket_t>::bucketId_t id) {
+  if (!fetched(id)) {
+    std::stringstream ss;
+    ss << "id " << id << " is not fetched at BucketPool::setDirty";
+    throw std::runtime_error(ss.str());
+  }
+  dirty[idToPos[id]] = true;
 }

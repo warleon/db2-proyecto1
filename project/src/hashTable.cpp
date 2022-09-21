@@ -60,45 +60,32 @@ size_t ExtendibleHash::hashToIndex(hash_t h) {
 }
 
 void ExtendibleHash::add(recordMeta meta, key_t key) {
-  static size_t addcount = 0;
-  std::cerr << "start adding val number " << ++addcount << std::endl;
   hash_t nk = keyToHash(key);
-  //// std::cerr << "key hashed " << nk << std::endl;
   size_t index = hashToIndex(nk);
-  //// std::cerr << "hash converted to index " << index << std::endl;
   auto oid = directory[index];
-  //// std::cerr << "bucket id retrieved " << oid << std::endl;
   bucket* buc = pool.fetch(oid);
-  //// std::cerr << "bucket fetched ptr = " << (void*)buc << std::endl;
   if (buc->add(key, meta)) {
-    //// std::cerr << "val succesfully added " << addcount << std::endl;
+    pool.setDirty(oid);
     return;
   }
-  //// std::cerr << "Bucket full need to split" << std::endl;
   buc->localDeph++;
-  //// std::cerr << "increaced bucket local depth" << std::endl;
   pool_t::bucketId_t nid = pool.create();
   bucket* nbuc = pool.fetch(nid);
   nbuc->localDeph = buc->localDeph;
-  //// std::cerr << "created new bucket" << std::endl;
   auto buff = std::move(buc->buffer);
   if (buc->localDeph > globalDepth) {
-    //// std::cerr << "have to resize th edirectory" << std::endl;
     doubleCapacity();
     size_t nbindex =  // TODO fix index calculation
         directory[index << 1] == oid ? (index << 1) : (index << 1) + 1;
     directory[nbindex] = nid;
   } else {
     // TODO else handle insertion of new bucket
-    // std::cerr << "panic bucket split without resize not implemented"
-    // << std::endl;
   }
 
   add(meta, key);
   for (auto& it : buff) {
     add(it.second, it.first);
   }
-  std::cerr << "end adding val number " << addcount << std::endl;
 }
 
 void ExtendibleHash::doubleCapacity() {
@@ -112,12 +99,13 @@ void ExtendibleHash::doubleCapacity() {
   }
 }
 
-bool ExtendibleHash::remove(key_t key) {
+void ExtendibleHash::remove(key_t key) {
   hash_t nk = keyToHash(key);
   size_t index = hashToIndex(nk);
   auto oid = directory[index];
   bucket* buc = pool.fetch(oid);
-  return buc->buffer.erase(key);
+  buc->remove(key);
+  pool.setDirty(oid);
 }
 
 void ExtendibleHash::index(std::string infoFile, std::string dataFile,

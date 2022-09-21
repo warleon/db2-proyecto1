@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <cstring>
 #include <fstream>
 #include <genRecord.hpp>
 #include <hashTable.hpp>
@@ -30,7 +31,6 @@ TEST(HashTable, constructorTest_0) {
 TEST(HashTable, indexTest_0) {
   ExtendibleHash index(hashHome / "test0");
   auto recs = info.allocate(2);
-  std::cerr << "recs at test0 " << (void*)recs << std::endl;
   setData(info.at(recs, 0), info);
   setData(info.at(recs, 1), info);
   std::ofstream data(dataFilePath, std::ios::binary);
@@ -47,7 +47,6 @@ TEST(HashTable, indexTest_0) {
 TEST(HashTable, indexTest_1) {
   ExtendibleHash index(hashHome / "test1");
   auto recs = info.allocate(2);
-  std::cerr << "recs at test1 " << (void*)recs << std::endl;
   setData(info.at(recs, 0), info);
   setData(info.at(recs, 1), info);
   std::ofstream data(dataFilePath, std::ios::binary);
@@ -62,8 +61,38 @@ TEST(HashTable, indexTest_1) {
   info.deallocate(recs);
 }
 
-TEST(HashTable, searchTest_0) {}
+TEST(HashTable, searchTest_0) {
+  ExtendibleHash index(hashHome / "test1");
+  auto recs = info.allocate(2);
+  setData(info.at(recs, 0), info);
+  auto key = index.getKey(info.at(recs, 0), info, 1);
+  auto meta = index.search(key);
+  EXPECT_TRUE(meta.info.getSize() == info.getSize());
+  std::ifstream data(dataFilePath, std::ios::binary);
+  EXPECT_TRUE(data.good()) << data.rdstate();
+  data.seekg(meta.pos);
+  info.read((Record*)info.at(recs, 1), 1, data);
+  EXPECT_EQ(strncmp(info.at(recs, 0), info.at(recs, 1), info.getSize()), 0);
+  info.deallocate(recs);
+}
 
-TEST(HashTable, rangeSearchTest_0) {}
-
-TEST(HashTable, removeTest_0) {}
+TEST(HashTable, removeTest_0) {
+  ExtendibleHash index(hashHome / "test1");
+  auto recs = info.allocate(1);
+  setData(info.at(recs, 0), info);
+  auto key = index.getKey(info.at(recs, 0), info, 1);
+  info.deallocate(recs);
+  EXPECT_NO_THROW(index.remove(key));
+}
+TEST(HashTable, removeTest_1) {
+  ExtendibleHash index(hashHome / "test1");
+  auto recs = info.allocate(1);
+  setData(info.at(recs, 0), info);
+  auto key = index.getKey(info.at(recs, 0), info, 1);
+  info.deallocate(recs);
+  EXPECT_ANY_THROW(index.remove(key));
+}
+TEST(HashTable, resizeTest_0) {
+  // TODO insert a lot of key-values to the index
+  // to force it to resize
+}

@@ -21,8 +21,6 @@ struct bucket {
   recordMeta get(key_t);
   bool add(key_t, recordMeta);
   void remove(key_t);
-  void readBucket(std::ifstream &);
-  void writeBucket(std::ofstream &);
 
   size_t localDeph;
 
