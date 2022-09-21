@@ -21,7 +21,7 @@ void bucket::checkKey(key_t key) {
 
 bucket::bucket() {}
 
-bucket::bucket(size_t cap) : localDeph(0), buffer(cap), capacity(cap) {}
+bucket::bucket(size_t cap) : localDepth(0), buffer(cap), capacity(cap) {}
 
 recordMeta bucket::get(key_t key) {
   checkKey(key);
@@ -29,7 +29,7 @@ recordMeta bucket::get(key_t key) {
 }
 bool bucket::add(key_t key, recordMeta info) {
   if (buffer.size() >= capacity) return false;
-  buffer[key] = info;
+  buffer.insert_or_assign(key, info);
   return true;
 }
 void bucket::remove(key_t key) {

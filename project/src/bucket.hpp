@@ -16,15 +16,16 @@ std::istream &operator>>(std::istream &, recordMeta &);
 
 struct bucket {
   using key_t = std::string;
+  using buffer_t = std::unordered_map<key_t, recordMeta>;
   bucket(size_t);
   bucket();
   recordMeta get(key_t);
   bool add(key_t, recordMeta);
   void remove(key_t);
 
-  size_t localDeph;
+  size_t localDepth;
 
-  std::unordered_map<key_t, recordMeta> buffer;
+   buffer_t buffer;
   size_t capacity;
   void checkKey(key_t);
 };

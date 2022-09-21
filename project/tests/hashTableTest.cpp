@@ -104,4 +104,9 @@ TEST(HashTable, resizeTest_0) {
     info << csv.lineInfo;
     data.write(csv.line, csv.lineInfo.getSize());
   }
+
+  info.close();
+  data.close();
+  ExtendibleHash index(hashHome / "resize");
+  index.index(infoFilePath, dataFilePath, 0);
 }

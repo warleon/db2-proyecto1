@@ -6,6 +6,7 @@
 #define MID(k, m, n) LAST((k) >> (m), ((n) - (m)))
 
 #include <iostream>
+// std::fstream debugFile("/data/tests/debug.txt");
 
 ExtendibleHash::ExtendibleHash(fs::path home, size_t bucketSize,
                                size_t poolSize)
@@ -60,6 +61,7 @@ size_t ExtendibleHash::hashToIndex(hash_t h) {
 }
 
 void ExtendibleHash::add(recordMeta meta, key_t key) {
+  std::cerr << "try to add " << key << std::endl;
   hash_t nk = keyToHash(key);
   size_t index = hashToIndex(nk);
   auto oid = directory[index];
@@ -68,28 +70,66 @@ void ExtendibleHash::add(recordMeta meta, key_t key) {
     pool.setDirty(oid);
     return;
   }
-  buc->localDeph++;
-  pool_t::bucketId_t nid = pool.create();
-  bucket* nbuc = pool.fetch(nid);
-  nbuc->localDeph = buc->localDeph;
-  auto buff = std::move(buc->buffer);
-  if (buc->localDeph > globalDepth) {
-    doubleCapacity();
-    size_t nbindex =  // TODO fix index calculation
-        directory[index << 1] == oid ? (index << 1) : (index << 1) + 1;
-    directory[nbindex] = nid;
-  } else {
-    // TODO else handle insertion of new bucket
-  }
+  bucket::buffer_t buff;
+  do {
+    pool_t::bucketId_t nid = pool.create();
+    bucket* nbuc = pool.fetch(nid);
+    nbuc->localDepth = ++(buc->localDepth);
+    buff.insert(buc->buffer.begin(), buc->buffer.end());
+    // just in case
+    buc->buffer.clear();
+    nbuc->buffer.clear();
 
-  add(meta, key);
-  for (auto& it : buff) {
-    add(it.second, it.first);
+    buff[key] = meta;
+
+    size_t nbindex;
+    if (buc->localDepth > globalDepth) {
+      doubleCapacity();
+      nbindex = siblingAfterDoubling(index);
+    } else {
+      nbindex = index;
+    }
+    directory[nbindex] = nid;
+
+    auto it = distribute(buff, buc, nbuc);
+
+    pool.setDirty(oid);
+    pool.setDirty(nid);
+    // if all inserted
+    if (it == buff.end()) {
+      break;
+    }
+  } while (1);
+  std::cerr << "finish to add " << key << std::endl;
+}
+bucket::buffer_t::iterator ExtendibleHash::distribute(bucket::buffer_t& buff,
+                                                      bucket* b1, bucket* b2) {
+  bool inserted = false;
+  auto it = buff.begin();
+  for (; it != buff.end(); it++) {
+    std::cerr << "try to reinsert " << it->first << std::endl;
+    // hash again
+    auto nk = keyToHash(it->first);
+    auto index =
+        MID(nk, sizeof(nk) - globalDepth - 1, sizeof(nk) - globalDepth);
+    std::cerr << "into " << index << std::endl;
+    if (index)
+      inserted = b1->add(it->first, it->second);
+    else
+      inserted = b2->add(it->first, it->second);
+
+    if (!inserted) {
+      break;
+    }
   }
+  it = buff.erase(buff.begin(), it);
+
+  return it;
 }
 
 void ExtendibleHash::doubleCapacity() {
   globalDepth = globalDepth << 1;
+  // debugFile << "doubling capacity " << globalDepth << std::endl;
   auto temp = std::move(directory);
   directory.resize(2 << globalDepth);
   for (auto& it : temp) {
@@ -116,13 +156,15 @@ void ExtendibleHash::index(std::string infoFile, std::string dataFile,
     throw std::runtime_error("can't index unexisting files");
   GenRecordInfo tempInfo;
   size_t off = 0;
+  Record rec = nullptr;
   while (info >> tempInfo) {
     if (!info.good()) break;
-    Record* rec = tempInfo.allocate(1);
-    tempInfo.read(rec, 1, data);
-    add({off, tempInfo}, getKey(tempInfo.at(rec, 0), tempInfo, keyPos));
+    rec = (Record)tempInfo.allocate(1);
+    data.read(rec, tempInfo.getSize());
+    add({off, tempInfo}, getKey(rec, tempInfo, keyPos));
     off += tempInfo.getSize();
-    tempInfo.deallocate(rec);
+    delete[] rec;
+    rec = nullptr;
   }
 }
 
@@ -132,3 +174,11 @@ ExtendibleHash::key_t ExtendibleHash::getKey(Record rec, GenRecordInfo info,
 
   return key_t(field, field + info.fieldSize(keyPos));
 }
+// size_t ExtendibleHash::sibling(size_t pos) {
+//   if (!pos) return pos + 1;                         // error prone
+//   if (pos == directory.size() - 1) return pos - 1;  // error prone
+//   if (directory[pos + 1] == directory[pos]) return pos + 1;
+//   if (directory[pos - 1] == directory[pos]) return pos - 1;
+//   return pos;
+// }
+size_t ExtendibleHash::siblingAfterDoubling(size_t pos) { return (pos << 1); }

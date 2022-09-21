@@ -9,6 +9,7 @@ BucketPool<bucket_t>::BucketPool(size_t poolCap, size_t bucketCap,
     : capacity(poolCap),
       bucketSize(bucketCap),
       clockCount(0),
+      lastId(0),
       pool(poolCap),
       dirty(poolCap),
       clock(poolCap),
@@ -18,6 +19,7 @@ BucketPool<bucket_t>::BucketPool(size_t poolCap, size_t bucketCap,
   fs::path meta(poolDirName / poolFileName);
   std::ifstream file(meta, std::ios::binary);
   if (file.is_open()) readPool(file);
+  file.close();
   // populate the pool
   for (auto &it : pool) {
     it = new bucket_t(bucketSize);
@@ -128,9 +130,9 @@ template <class bucket_t>
 void BucketPool<bucket_t>::readPool(std::ifstream &file) {
   size_t lid;
   file.read((char *)&lid, sizeof(size_t));
+  lastId = lid;
   file.read((char *)&capacity, sizeof(size_t));
   file.read((char *)&bucketSize, sizeof(size_t));
-  lastId = lid;
 }
 
 template <class bucket_t>
