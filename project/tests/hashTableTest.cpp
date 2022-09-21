@@ -118,11 +118,12 @@ TEST(HashTable, searchTest_1) {
   std::mt19937 gen(rd());  // seed the generator
   std::uniform_int_distribution<size_t> distr(10, 100);  // define the range
   size_t recordIndex = distr(gen);
-  std::cerr << "search for record " << recordIndex << std::endl;
   for (size_t i = 0; i < recordIndex; i++) {
     csv.parseLine(",");
   }
   auto key = index.getKey(csv.line, csv.lineInfo, 0);
+  std::cerr << "search for record " << recordIndex << std::endl;
+  std::cerr << "record key = " << key << std::endl;
   auto meta = index.search(key);
   std::cerr << "found size " << meta.info.getSize() << std::endl;
   std::cerr << "expected size " << csv.lineInfo.getSize() << std::endl;

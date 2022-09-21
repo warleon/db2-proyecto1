@@ -5,8 +5,6 @@
 #define LAST(k, n) ((k) & ((1 << (n)) - 1))
 #define MID(k, m, n) LAST((k) >> (m), ((n) - (m)))
 
-#include <iostream>
-
 ExtendibleHash::ExtendibleHash(fs::path home, size_t bucketSize,
                                size_t poolSize)
     : dirName(home),
@@ -124,15 +122,10 @@ bucket::buffer_t::iterator ExtendibleHash::distribute(bucket::buffer_t& buff,
 }
 
 void ExtendibleHash::doubleCapacity() {
-  // std::cerr << "size before = " << directory.size() << std::endl;
   ++globalDepth;
   // auto temp = std::move(directory);
   directory.resize(1 << globalDepth);
-  // std::cerr << "size after = " << directory.size() << std::endl;
   for (size_t i = directory.size() - 1; i >= 0; --i) {
-    // std::cerr << "i = " << i << std::endl;
-    // std::cerr << "i>>1 = " << (i >> 1) << std::endl;
-
     directory[i] = directory[i >> 1];
     if (!i) break;
   }

@@ -1,7 +1,6 @@
 #include "genRecord.hpp"
 
 #include <exception>
-#include <iostream>
 #include <utility>
 
 void bytesToInt8(const char* from, char* to, size_t n) {
