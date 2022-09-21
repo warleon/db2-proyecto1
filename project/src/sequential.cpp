@@ -4,7 +4,7 @@
 #include <string>
 #include <stdio.h>
 using namespace std;
-#define AuxMax 50
+#define AuxMax 5
 #define Header 16
 
 struct Record{
@@ -106,6 +106,7 @@ public:
   Record search(int key);
   pair<int,int> search_data_prev(int key);
   pair<int,int>search_data_next(int key);
+
   //******Funciones auxiliares*****
 
   // Actualiza los punteros de los registros
@@ -345,113 +346,44 @@ int SequentialFile::search_data(int key){
 
 // devuelve la posicion del menor mas cercano para postriormente modificar sus punteros
 pair<int,int> SequentialFile::search_data_prev(int key){  // retorna (pos_indice, flag de archivo)
-   fstream file(fileName, ios::binary | ios::in | ios::out);
-   if(file.is_open()){
-
-     DataRecord dr;
-     int left=0;
-     int right=sizeFile- 1;
-     int mid=-1;
-     int ans=-1;
-     bool p=0;
-     file.seekg(-sizeof(DataRecord),ios::end);
-     file.read((char*)&dr,sizeof(DataRecord));
-     if(dr.Earnings > key){
-      p=1;
-     }
-     // buscar ese valor en el datos.dat
-     while(left<=right){
-       mid=left + (right-left)/2;
-       file.seekg(mid*sizeof(DataRecord)+16,ios::beg);
-       file.read((char*)&dr,sizeof(DataRecord));
-       if(dr.Earnings <= key){
-         ans=mid;
-         right=mid-1;
-       }
-       else{
-        left=mid+1;
-       }
-     }
-      //cout<<"despues del bsprev: "<<ans<<'\n';
-      file.seekg(ans*sizeof(DataRecord)+16,ios::beg);
-      file.read((char*)&dr,sizeof(DataRecord));
-      while(dr.eliminado==1 && ans<=sizeFile-1){
-      ans++;
-      file.seekg(ans*sizeof(DataRecord)+16,ios::beg);
-      file.read((char*)&dr,sizeof(DataRecord));
-     }
-    file.seekg(ans*sizeof(DataRecord)+16,ios::beg);
-    file.read((char*)&dr,sizeof(DataRecord));
-    if(dr.eliminado==1){
-      p=1;
-    }
-
-    
-     // buscar ese valor en el aux.dat
-     fstream file(fileAux, ios::binary | ios::in | ios::out);
+   fstream file_name(fileName, ios::binary | ios::in | ios::out);
+      
+    // buscar ese valor en el aux.dat
+     fstream file_aux(fileAux, ios::binary | ios::in | ios::out);
      DataRecord temp;
      int pos=-1;
-     int val=-1;
+     int val=-1e9;
      for(int i=0;i<sizeAux;i++){
-       file.seekg(i*sizeof(DataRecord),ios::beg);
-       file.read((char*)&temp,sizeof(DataRecord));
+       file_aux.seekg(i*sizeof(DataRecord),ios::beg);
+       file_aux.read((char*)&temp,sizeof(DataRecord));
+       if(temp.eliminado==1) continue;
        if(temp.Earnings<=key){
-         if(temp.eliminado==0){
             if(val<temp.Earnings){
               val=temp.Earnings;
               pos=i;
             }
-         }
-           
        }
-     }
-
-     if(p==1){
-      if(pos==-1){
-        return make_pair(-2,-2);
       }
-      else return make_pair(pos,1);
-     }
-     else{
-      if(pos==-1){
-        return make_pair(ans,0);
-      }
-      else {
-        if(dr.Earnings > val){
-          return make_pair(ans,0);
-        }
-        else return make_pair(pos,1);
-      }
-     }
-
-      
-
-     return make_pair(-2,-2);
-    }
-    else return make_pair(-2,-2);
-}
-
-pair<int,int> SequentialFile::search_data_next(int key){  // retorna (pos_indice, flag de archivo)
-   fstream file(fileName, ios::binary | ios::in | ios::out);
-   if(file.is_open()){
-
+     
+     
      DataRecord dr;
      int left=0;
      int right=sizeFile- 1;
      int mid=-1;
-     int ans=-1;
-     bool p=0;
-     file.seekg(-sizeof(DataRecord),ios::end);
-     file.read((char*)&dr,sizeof(DataRecord));
-     if(dr.Earnings > key){
-      p=1;
-     }
+     int ans=sizeFile-1;
      // buscar ese valor en el datos.dat
      while(left<=right){
        mid=left + (right-left)/2;
-       file.seekg(mid*sizeof(DataRecord)+16,ios::beg);
-       file.read((char*)&dr,sizeof(DataRecord));
-       if(dr.Earnings <= key){
+       file_name.seekg(mid*sizeof(DataRecord)+16,ios::beg);
+       file_name.read((char*)&dr,sizeof(DataRecord));
+
+       if(dr.Earnings==key){
+         if(dr.eliminado==1) ans=mid+1;
+         else ans=mid;
+         break;
+       }
+
+       else if(dr.Earnings < key){
          ans=mid;
          right=mid-1;
        }
@@ -459,66 +391,132 @@ pair<int,int> SequentialFile::search_data_next(int key){  // retorna (pos_indice
         left=mid+1;
        }
      }
-      ans--;
-      file.seekg(ans*sizeof(DataRecord)+16,ios::beg);
-      file.read((char*)&dr,sizeof(DataRecord));
-     while(dr.eliminado==1 && ans>=0){
-      ans--;
-      file.seekg(ans*sizeof(DataRecord)+16,ios::beg);
-      file.read((char*)&dr,sizeof(DataRecord));
+      file_name.seekg(ans*sizeof(DataRecord)+16,ios::beg);
+      file_name.read((char*)&dr,sizeof(DataRecord));
+      if(dr.Earnings > key) ans++;
+
+
+      while(dr.eliminado==1 && ans<=sizeFile-1){
+      file_name.seekg(ans*sizeof(DataRecord)+16,ios::beg);
+      file_name.read((char*)&dr,sizeof(DataRecord));
+      ans++;
      }
-    file.seekg(ans*sizeof(DataRecord)+16,ios::beg);
-    file.read((char*)&dr,sizeof(DataRecord));
-    if(dr.eliminado==1){
-      p=1;
-    }
+    file_name.seekg(ans*sizeof(DataRecord)+16,ios::beg);
+    file_name.read((char*)&dr,sizeof(DataRecord));
     
+
+    // calculo de resultados
+    if(ans==sizeFile){
+      return make_pair(pos,1);
+    }
+    if(pos==-1){
+      return make_pair(ans,0); // por verse
+    }
+
+    DataRecord regis;
+    int key_datos;
+    file_name.seekg(ans*sizeof(DataRecord)+16,ios::beg);
+    file_name.read((char*)&regis,sizeof(DataRecord));
+    key_datos=regis.Earnings;
+    int key_aux;
+    file_aux.seekg(pos*sizeof(DataRecord),ios::beg);
+    file_aux.read((char*)&regis,sizeof(DataRecord));
+    key_aux=regis.Earnings;
+    if(key_datos<key_aux)
+    return make_pair(pos,1);
+    else
+    return make_pair(ans,0);
+}
+
+
+pair<int,int> SequentialFile::search_data_next(int key){  // retorna (pos_indice, flag de archivo)
+   fstream file_name(fileName, ios::binary | ios::in | ios::out);
+     DataRecord dr;
+     int left=0;
+     int right=sizeFile- 1;
+     int mid=-1;
+     int ans=sizeFile-1;
+
      // buscar ese valor en el aux.dat
-     fstream file(fileAux, ios::binary | ios::in | ios::out);
+     fstream file_aux(fileAux, ios::binary | ios::in | ios::out);
      DataRecord temp;
      int pos=-1;
-     int val=-1;
+     int ans_aux=1e9;
+
+
+
+     // for para la busqueda en el aux.dat
      for(int i=0;i<sizeAux;i++){
-       file.seekg(i*sizeof(DataRecord),ios::beg);
-       file.read((char*)&temp,sizeof(DataRecord));
+      
+       file_aux.seekg(i*sizeof(DataRecord),ios::beg);
+       file_aux.read((char*)&temp,sizeof(DataRecord));
+       // si el registro ya fue eliminado
+       if(temp.eliminado==1) continue;
+       
+       // calculo del primer elemento mayor o igual a key y valido
        if(temp.Earnings>=key){
-         if(temp.eliminado==0){
-            if(val>temp.Earnings){
-              val=temp.Earnings;
+            if(ans_aux>temp.Earnings){
+              ans_aux=temp.Earnings;
               pos=i;
             }
-         }
            
        }
      }
 
-     if(p==1){
-      if(pos==-1){
-        return make_pair(-2,-2);
-      }
-      else return make_pair(pos,1);
-     }
-     else{
-      if(pos==-1){
-        return make_pair(ans,0);
-      }
-      else {
-        if(dr.Earnings > val){
-          return make_pair(ans,0);
-        }
-        else return make_pair(pos,1);
-      }
-     }
+     
 
-      
+     // buscar ese valor en el datos.dat
+     while(left<=right){
+       mid=left + (right-left)/2;
+       file_name.seekg(mid*sizeof(DataRecord)+16,ios::beg);
+       file_name.read((char*)&dr,sizeof(DataRecord));
 
-     return make_pair(-2,-2);
+       if(dr.Earnings==key){
+         if(dr.eliminado==1) ans=mid-1;
+         else ans=mid;
+         break;
+       }
+
+       else if(dr.Earnings < key){
+         ans=mid;
+         right=mid-1;
+       }
+       else{
+        left=mid+1;
+       }
+     }
+     
+    file_name.seekg(ans*sizeof(DataRecord)+16,ios::beg);
+    file_name.read((char*)&dr,sizeof(DataRecord));
+    if(dr.Earnings < key) ans--;
+
+    while(dr.eliminado==1 && ans>=0){
+      file_name.seekg(ans*sizeof(DataRecord)+16,ios::beg);
+      file_name.read((char*)&dr,sizeof(DataRecord));
+      ans--;
+     }
+    if(ans==-1){
+      return make_pair(pos,1);
     }
-    else return make_pair(-2,-2);
+    if(pos==-1){
+      return make_pair(ans,0);
+    }
+    DataRecord regis;
+    int key_datos;
+    file_name.seekg(ans*sizeof(DataRecord)+16,ios::beg);
+    file_name.read((char*)&regis,sizeof(DataRecord));
+    key_datos=regis.Earnings;
+    int key_aux;
+    file_aux.seekg(pos*sizeof(DataRecord),ios::beg);
+    file_aux.read((char*)&regis,sizeof(DataRecord));
+    key_aux=regis.Earnings;
+    if(key_datos>key_aux)
+    return make_pair(pos,1);
+    else
+    return make_pair(ans,0);
+
+
 }
-
-
-
 
 
 
@@ -676,81 +674,45 @@ Record SequentialFile::search(int key){
 
 
 bool SequentialFile::add(Record& reg){
-  //Localizar la posición en donde será insertado el nuevo registro.
-      //Si el espacio está libre, insertar.
-      //Sino, insertar el registro en un espacio auxiliar.
-      //En este caso, los punteros deberían ser actualizados.
-  //Se requiere reorganizar el archivo original cada cierto tiempo mezclando ordenadamente con el espacio auxiliar.
   ofstream file_name(fileName, ios::binary | ios::in | ios::out);
   ofstream file_aux(fileAux, ios::binary | ios::in | ios::out);
   DataRecord registro(reg);
-       //cout<<"registro.earnings es: "<<registro.Earnings<<'\n';
+
   pair<int,int> p1 = search_data_prev(registro.Earnings);
   pair<int,int> p2 = search_data_next(registro.Earnings);
-       // Para agregarlo en el datos.dat
-       //cout<<"p1.first es: "<<p1.first<<'\n';
-       //cout<<"p2.first es: "<<p2.first<<'\n';
-  if((p1.first-p2.first)>1 && p1.second==0 && p2.second==0){
-        //cout<<"sasd"<<'\n';
-        int pos_nuevo;
-        pos_nuevo = (p2.first+1)*sizeof(DataRecord)+16;
-        //cout<<"pos_nuevo "<<pos_nuevo<<endl;
-        
-        //actualizar punteros hacia el nuevo registro
-        file_name.seekp(p2.first*sizeof(DataRecord)+24,ios::beg);
-        file_name.write((char*)&pos_nuevo,sizeof(pos_nuevo));
-        //actualizar punteros hacia el prev
-        registro.next=p1.first*sizeof(DataRecord)+16;
-        registro.file=p1.second;
-
-        file_name.seekp(pos_nuevo,ios::beg);
-        file_name.write((char*)&registro,sizeof(DataRecord));
-      
-       //
-       
-       
-       //actualizar la cabecera
-       //if(header==(p1.first*sizeof(DataRecord)+16) && file_header == p1.second){
-       // actualizar_header(p1.first,p1.second);
-      // }
-       sizeFile++;
-       return true;
-  }
+  
   // Insertar en el auxiliar
+  if(sizeAux == AuxMax){
+    reconstruction();
+    //falta actualizar punteros
+    sizeFile=sizeFile+sizeAux+1;
+    sizeAux=0;
+    return true;
+  }
   else{
-    if(sizeAux == AuxMax){
-      reconstruction();
-      //falta actualizar punteros
-      sizeFile=sizeFile+sizeAux+1;
-      sizeAux=0;
-      return true;
+    file_aux.seekp(0,ios::end);
+    int pos_aux = file_aux.tellp();
+    int fa =1;
+    /*******************     Corregir           *****************/
+    //Actualizar el mayor que apunta al nuevo
+    if(p2.second==0){
+      file_name.seekp(p2.first*sizeof(DataRecord)+24,ios::beg);
+      file_name.write((char*)&pos_aux,sizeof(pos_aux));
+      file_name.write((char*)&fa,sizeof(fa));
     }
     else{
-      file_aux.seekp(0,ios::end);
-      int pos_aux = file_aux.tellp();
-      int fa =1;
-      //Actualizar el next
-      if(p2.second==0){
-        file_name.seekp(p2.first*sizeof(DataRecord)+24,ios::beg);
-        file_name.write((char*)&pos_aux,sizeof(pos_aux));
-        file_name.write((char*)&fa,sizeof(fa));
-      }
-      else{
-        file_aux.seekp(p2.first*sizeof(DataRecord)+8,ios::beg);
-        file_aux.write((char*)&pos_aux,sizeof(pos_aux));
-        file_aux.write((char*)&fa,sizeof(fa));
-      }
-      //actualizar punteros hacia el prev
-      registro.next=p1.first*sizeof(DataRecord)+16;
-      registro.file=p1.second;
-      file_aux.seekp(0,ios::end);
-
-      sizeAux++;
-      return true;
+      file_aux.seekp(p2.first*sizeof(DataRecord)+8,ios::beg);
+      file_aux.write((char*)&pos_aux,sizeof(pos_aux));
+      file_aux.write((char*)&fa,sizeof(fa));
     }
-
+    //actualizar punteros hacia el prev
+    registro.next=p1.first*sizeof(DataRecord)+16;
+    registro.file=p1.second;
+    file_aux.seekp(0,ios::end);
+    file_aux.write((char*)&registro,sizeof(DataRecord));
+    sizeAux++;
+    return true;
   }
-
 }
 
 void init(){
@@ -783,7 +745,6 @@ void init(){
     file2.write((char*)&siguiente, sizeof(int)); //El siguiente en la posicion fisica en el datos.dat o auxiliar.dat
     file2.write((char*)&archivo, sizeof(int));
     file2.write((char*)&eliminado, sizeof(eliminado));
-    //cout<<record.Earnings<<" "<<pos<<" "<<siguiente<<" "<<archivo<<" "<<eliminado<<endl;
     pos=file.tellg();
     pos_siguiente++;
   }
@@ -821,84 +782,21 @@ void show_date(string file){
 }
 
 
-int main(){ 
- 
- /*
- init();
- cout<<endl<<endl<<endl;
- show_date("datos.dat");
- cout<<endl<<endl<<endl;
- show_date("auxiliar.dat");
- */
 
-//cout<<seq.eliminados<<endl<<seq.sizeAux<<endl<<seq.header<<endl<<seq.file_header<<endl;
-//  cout<<seq.header<<" "<<seq.file_header;
-
-  //init();
-  //show_date("datos.dat");
-  //Record registro1("Eros",190.35,2021,"Computacion");
-  
-
-
-  //init();
-
-  
+int main(){
   SequentialFile seq;
-  Record registro1("Carry7",210,2021,"Computacion");
-
-int a,b,c,d;
-ifstream prueba("datos.dat", ios::binary);
-prueba.seekg(0,ios::beg);
-prueba.read((char*)&a,sizeof(int));
-prueba.read((char*)&b,sizeof(int));
-prueba.read((char*)&c,sizeof(int));
-prueba.read((char*)&d,sizeof(int));
-cout<<a<<" "<<b<<" "<<c<<" "<<d<<"\n\n\n";
-  seq.add(registro1);
-prueba.seekg(0,ios::beg);
-prueba.read((char*)&a,sizeof(int));
-prueba.read((char*)&b,sizeof(int));
-prueba.read((char*)&c,sizeof(int));
-prueba.read((char*)&d,sizeof(int));
-cout<<a<<" "<<b<<" "<<c<<" "<<d<<"\n\n\n";
-
-
- /*
+  Record reg("Eros5",50,2021,"Computacion");
+  seq.add(reg);
   show_date("datos.dat");
-  cout<<"\n";
+  cout<<"\n\n";
   show_date("auxiliar.dat");
-  cout<<"\n";
-  */
+  cout<<"\n\n";
   
-
- /*
-  Record registro1("Joaquin222",115,2021,"Computacion");
-  SequentialFile seq;
-  seq.add(registro1);
-  show_date("datos.dat");
-  cout<<"\n";
-  show_date("auxiliar.dat");
-  cout<<"\n";
-  show_date("datos2.dat");
-*/
-  
-
-  //cout<<"\n";
-  //show_date("datos2.dat");
-  //seq.remove(90);
-  //show_date("datos.dat");
-  //cout<<seq.search_data_prev(74).first<<" "<<seq.search_data_prev(74).second<<'\n';
-  //cout<<seq.search_data_next(74).first<<" "<<seq.search_data_next(74).second<<endl;
-  /*
-  Record record=seq.search(180);
-  record.print();
-  */
-  /*
-  show_date("datos.dat");
-  SequentialFile seq;
-  DataRecord record(190);
-  seq.add(record);
-  show_date("datos.dat");
-  show_date("auxiliar.dat");
-  */
 }
+
+
+
+/* Falta
+- add  a un menor de todos
+- actulizar header cuando add mayor a todos
+*/
