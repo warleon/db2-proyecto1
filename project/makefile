@@ -2,5 +2,6 @@
 	rm -rf /data/tests
 	cd build;cmake ..
 	cd build;make
-	cd build;ctest;./program 
+	cd build;ctest 
+	cd build;./program 
 	

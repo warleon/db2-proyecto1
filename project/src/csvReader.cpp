@@ -1,10 +1,10 @@
 #include "csvReader.hpp"
 
-CSV::CSV(std::string fn)
+CSV::CSV(std::string fn, std::string sep)
     : record(""), header(nullptr), line(nullptr), file(fn) {
   if (!file.good()) throw std::runtime_error("filename does not exists");
   readPage();
-  parseLine();
+  parseLine(sep.c_str());
   header = line;
   line = nullptr;
   headerInfo = lineInfo;
@@ -31,7 +31,7 @@ void CSV::parseLine(const char* sep) {
     readPage();
     return parseLine(sep);
   } else {
-    record = ptr;
+    record += ptr;
   }
   // here a complete line has been readed into record
 
@@ -40,7 +40,7 @@ void CSV::parseLine(const char* sep) {
   std::vector<char*> tokens;
 
   auto size = record.size();
-  char* recBuff = strncpy(new char[size], record.c_str(), size);
+  char* recBuff = strncpy(new char[size + 1]{}, record.c_str(), size);
 
   for (char* token = strtok(recBuff, sep); token;
        token = strtok(nullptr, sep)) {
@@ -67,7 +67,7 @@ std::pair<dtype, size_t> CSV::parseToken(char* token) {
   size_t size = 0;
   for (; token[size]; size++) {
     auto c = token[size];
-    if (isalpha(c) || type == dtype::int8) {
+    if (isalpha(c) || isblank(c) || type == dtype::int8) {
       type = dtype::int8;
     } else if (isdigit(c) && (type == dtype::int64 || type == dtype::float64)) {
       ;
