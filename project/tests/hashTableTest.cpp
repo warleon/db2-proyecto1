@@ -6,6 +6,7 @@
 #include <genRecord.hpp>
 #include <hashTable.hpp>
 #include <iostream>
+#include <random>
 #include <utility>
 
 const fs::path hashHome("/data/tests/hashTest/index");
@@ -95,8 +96,6 @@ TEST(HashTable, removeTest_1) {
   EXPECT_ANY_THROW(index.remove(key));
 }
 TEST(HashTable, resizeTest_0) {
-  // TODO insert a lot of key-values to the index
-  // to force it to resize
   CSV csv(csvPath);
   std::ofstream info(infoFilePath, std::ios::binary);
   std::ofstream data(dataFilePath, std::ios::binary);
@@ -109,4 +108,34 @@ TEST(HashTable, resizeTest_0) {
   data.close();
   ExtendibleHash index(hashHome / "resize");
   index.index(infoFilePath, dataFilePath, 0);
+}
+TEST(HashTable, searchTest_1) {
+  CSV csv(csvPath);
+  ExtendibleHash index(hashHome / "resize");
+
+  // copied from google
+  std::random_device rd;   // obtain a random number from hardware
+  std::mt19937 gen(rd());  // seed the generator
+  std::uniform_int_distribution<size_t> distr(10, 100);  // define the range
+  size_t recordIndex = distr(gen);
+  std::cerr << "search for record " << recordIndex << std::endl;
+  for (size_t i = 0; i < recordIndex; i++) {
+    csv.parseLine(",");
+  }
+  auto key = index.getKey(csv.line, csv.lineInfo, 0);
+  auto meta = index.search(key);
+  std::cerr << "found size " << meta.info.getSize() << std::endl;
+  std::cerr << "expected size " << csv.lineInfo.getSize() << std::endl;
+  EXPECT_TRUE(meta.info.getSize() == csv.lineInfo.getSize());
+  std::ifstream data(dataFilePath, std::ios::binary);
+  EXPECT_TRUE(data.good()) << data.rdstate();
+  data.seekg(meta.pos);
+  Record rec = (Record)csv.lineInfo.allocate(1);
+  data.read(rec, csv.lineInfo.getSize());
+  (std::cerr << "found record [|").write(rec, meta.info.getSize())
+      << "|]" << std::endl;
+  (std::cerr << "expected record [|").write(csv.line, csv.lineInfo.getSize())
+      << "|]" << std::endl;
+  EXPECT_EQ(strncmp(rec, csv.line, csv.lineInfo.getSize()), 0);
+  delete[] rec;
 }

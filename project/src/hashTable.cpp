@@ -6,7 +6,6 @@
 #define MID(k, m, n) LAST((k) >> (m), ((n) - (m)))
 
 #include <iostream>
-// std::fstream debugFile("/data/tests/debug.txt");
 
 ExtendibleHash::ExtendibleHash(fs::path home, size_t bucketSize,
                                size_t poolSize)
@@ -53,6 +52,7 @@ ExtendibleHash::queryResult_t ExtendibleHash::search(
   hash_t nk = keyToHash(key);
   size_t index = hashToIndex(nk);
   bucket* buc = pool.fetch(directory[index]);
+  buc->checkKey(key);
   return buc->buffer[key];
 }
 
@@ -61,7 +61,6 @@ size_t ExtendibleHash::hashToIndex(hash_t h) {
 }
 
 void ExtendibleHash::add(recordMeta meta, key_t key) {
-  std::cerr << "try to add " << key << std::endl;
   hash_t nk = keyToHash(key);
   size_t index = hashToIndex(nk);
   auto oid = directory[index];
@@ -100,19 +99,16 @@ void ExtendibleHash::add(recordMeta meta, key_t key) {
       break;
     }
   } while (1);
-  std::cerr << "finish to add " << key << std::endl;
 }
 bucket::buffer_t::iterator ExtendibleHash::distribute(bucket::buffer_t& buff,
                                                       bucket* b1, bucket* b2) {
   bool inserted = false;
   auto it = buff.begin();
   for (; it != buff.end(); it++) {
-    std::cerr << "try to reinsert " << it->first << std::endl;
     // hash again
     auto nk = keyToHash(it->first);
     auto index =
         MID(nk, sizeof(nk) - globalDepth - 1, sizeof(nk) - globalDepth);
-    std::cerr << "into " << index << std::endl;
     if (index)
       inserted = b1->add(it->first, it->second);
     else
@@ -128,14 +124,17 @@ bucket::buffer_t::iterator ExtendibleHash::distribute(bucket::buffer_t& buff,
 }
 
 void ExtendibleHash::doubleCapacity() {
-  globalDepth = globalDepth << 1;
-  // debugFile << "doubling capacity " << globalDepth << std::endl;
-  auto temp = std::move(directory);
-  directory.resize(2 << globalDepth);
-  for (auto& it : temp) {
-    for (size_t i = 0; i < 2; i++) {
-      directory.push_back(it);
-    }
+  // std::cerr << "size before = " << directory.size() << std::endl;
+  ++globalDepth;
+  // auto temp = std::move(directory);
+  directory.resize(1 << globalDepth);
+  // std::cerr << "size after = " << directory.size() << std::endl;
+  for (size_t i = directory.size() - 1; i >= 0; --i) {
+    // std::cerr << "i = " << i << std::endl;
+    // std::cerr << "i>>1 = " << (i >> 1) << std::endl;
+
+    directory[i] = directory[i >> 1];
+    if (!i) break;
   }
 }
 
@@ -174,11 +173,4 @@ ExtendibleHash::key_t ExtendibleHash::getKey(Record rec, GenRecordInfo info,
 
   return key_t(field, field + info.fieldSize(keyPos));
 }
-// size_t ExtendibleHash::sibling(size_t pos) {
-//   if (!pos) return pos + 1;                         // error prone
-//   if (pos == directory.size() - 1) return pos - 1;  // error prone
-//   if (directory[pos + 1] == directory[pos]) return pos + 1;
-//   if (directory[pos - 1] == directory[pos]) return pos - 1;
-//   return pos;
-// }
 size_t ExtendibleHash::siblingAfterDoubling(size_t pos) { return (pos << 1); }
