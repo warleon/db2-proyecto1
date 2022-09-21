@@ -102,6 +102,6 @@ TEST(HashTable, resizeTest_0) {
   std::ofstream data(dataFilePath, std::ios::binary);
   while (csv.parseLine(",")) {
     info << csv.lineInfo;
-    csv.lineInfo.write((Record*)&csv.line, 1, data);
+    data.write(csv.line, csv.lineInfo.getSize());
   }
 }
