@@ -9,10 +9,7 @@
 
 class CSV {
   static const size_t pageSize = 4096;
-  char buffer[pageSize];
   std::string record;
-
-  void readPage();
 
  public:
   Record header, line;
@@ -21,7 +18,7 @@ class CSV {
 
   CSV(std::string, std::string sep = ",");
   ~CSV();
-  void parseLine(const char *);
+  bool parseLine(const char *);
   std::pair<dtype, size_t> parseToken(char *);
   void castToken(char *, char *, size_t);
 };

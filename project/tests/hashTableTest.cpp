@@ -97,5 +97,11 @@ TEST(HashTable, removeTest_1) {
 TEST(HashTable, resizeTest_0) {
   // TODO insert a lot of key-values to the index
   // to force it to resize
-  CSV reader(csvPath);
+  CSV csv(csvPath);
+  std::ofstream info(infoFilePath, std::ios::binary);
+  std::ofstream data(dataFilePath, std::ios::binary);
+  while (csv.parseLine(",")) {
+    info << csv.lineInfo;
+    csv.lineInfo.write((Record*)&csv.line, 1, data);
+  }
 }

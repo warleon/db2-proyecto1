@@ -97,7 +97,6 @@ class GenRecordInfo {
   // number of items in the field
   sizeSet_t fieldItemsCount;
 
- private:
   size_t size;
   size_t fieldCount;
   sizeSet_t fieldOffset;
