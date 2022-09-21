@@ -4,7 +4,7 @@
 #include <string>
 #include <stdio.h>
 using namespace std;
-#define AuxMax 2
+#define AuxMax 50
 #define Header 16
 
 struct Record{
@@ -100,9 +100,10 @@ public:
   bool add(Record& reg);
   bool remove_register(float key);
   int search_data(int key);
+  vector<Record> range_search(int key1, int key2);
+
   int search_aux(int key);
   Record search(int key);
-  Record range_search(int key1,int key2);
   pair<int,int> search_data_prev(int key);
   pair<int,int>search_data_next(int key);
   //******Funciones auxiliares*****
@@ -543,11 +544,93 @@ int SequentialFile::search_aux(int key){
   
 }
 
-/*
-Record SequentialFile::range_search(int key1, int key2){
 
+vector<Record> SequentialFile::range_search(int key1, int key2){
+      // key2 < key1
+      fstream file1(fileName, ios::binary | ios::in | ios::out);
+      fstream file2(fileAux, ios::binary | ios::in | ios::out);
+      fstream file3(fileCsv, ios::binary | ios::in | ios::out);
+      vector<Record> vr;
+      DataRecord dr;
+      Record elemento;
+      string line;
+        pair<int,int> p1 = search_data_prev(key1);
+        if(p1.second==0){
+            p1.first = p1.first*sizeof(DataRecord)+16;
+            file1.seekg(p1.first,ios::beg);
+            file1.read((char*)&dr,sizeof(DataRecord));
+          }
+          else{
+            p1.first = p1.first*sizeof(DataRecord);
+            file2.seekg(p1.first,ios::beg);
+            file2.read((char*)&dr,sizeof(DataRecord));
+          }
+        while(dr.Earnings>=key2 ){
+          
+          elemento = Record();
+          if(p1.second==0){
+            //  Leer directamente en el csv
+            file3.seekg(dr.pos,ios::beg);
+            getline(file3,line);
+            char *data = const_cast<char *>(line.c_str());
+            elemento.Name = strtok(data, ",");
+            elemento.Earnings = stod(strtok(NULL, ","));
+            elemento.Year = stoi(strtok(NULL, ","));
+            elemento.Sport = strtok(NULL, "\r");
+            //  Actualizar punteros
+            p1.first = dr.next;
+            p1.second = dr.file;
+            //  Obtener posicion para leer en el csv
+            if(p1.second==0){
+              file1.seekg(p1.first,ios::beg);
+            //Problema*******************
+            file1.read((char*)&dr,sizeof(DataRecord));
+            }
+            else {
+              file2.seekg(p1.first,ios::beg);
+            //Problema*******************
+            file2.read((char*)&dr,sizeof(DataRecord));
+            }
+            //  Agregar
+
+            vr.push_back(elemento);
+            if(p1.first==-1) break;
+          }
+          else{
+            //  Leer directamente en el csv
+            file3.seekg(dr.pos,ios::beg);
+            getline(file3,line);
+            char *data = const_cast<char *>(line.c_str());
+            elemento.Name = strtok(data, ",");
+            elemento.Earnings = stod(strtok(NULL, ","));
+            elemento.Year = stoi(strtok(NULL, ","));
+            elemento.Sport = strtok(NULL, "\r");
+            //  Actualizar punteros
+            p1.first = dr.next;
+            p1.second = dr.file;
+            //  Obtener posicion para leer en el csv
+            if(p1.second==0){
+              file1.seekg(p1.first,ios::beg);
+            //Problema*******************
+            file1.read((char*)&dr,sizeof(DataRecord));
+            }
+            else {
+              file2.seekg(p1.first,ios::beg);
+            //Problema*******************
+            file2.read((char*)&dr,sizeof(DataRecord));
+            }
+
+            /*file2.seekg(p1.first,ios::beg);
+            //Problema*******************
+            file2.read((char*)&dr,sizeof(DataRecord));*/
+            //  Agregar
+            vr.push_back(elemento);
+            if(p1.first==-1) break;
+          }
+        }
+        
+        return vr;
 }
-*/
 
 Record SequentialFile::search(int key){
     int pos = search_data(key);
@@ -635,14 +718,14 @@ bool SequentialFile::add(Record& reg){
   }
   // Insertar en el auxiliar
   else{
-    cout<<"a\n";
     if(sizeAux == AuxMax){
       reconstruction();
       //falta actualizar punteros
+      sizeFile=sizeFile+sizeAux+1;
+      sizeAux=0;
       return true;
     }
     else{
-      cout<<"b\n";
       file_aux.seekp(0,ios::end);
       int pos_aux = file_aux.tellp();
       int fa =1;
@@ -651,24 +734,23 @@ bool SequentialFile::add(Record& reg){
         file_name.seekp(p2.first*sizeof(DataRecord)+24,ios::beg);
         file_name.write((char*)&pos_aux,sizeof(pos_aux));
         file_name.write((char*)&fa,sizeof(fa));
-        cout<<"c\n";
       }
       else{
         file_aux.seekp(p2.first*sizeof(DataRecord)+8,ios::beg);
         file_aux.write((char*)&pos_aux,sizeof(pos_aux));
         file_aux.write((char*)&fa,sizeof(fa));
-        cout<<"d\n";
       }
-
       //actualizar punteros hacia el prev
       registro.next=p1.first*sizeof(DataRecord)+16;
       registro.file=p1.second;
-
       file_aux.seekp(0,ios::end);
-      file_aux.write((char*)&registro,sizeof(DataRecord));
+
+      sizeAux++;
       return true;
     }
+
   }
+
 }
 
 void init(){
@@ -714,6 +796,7 @@ void init(){
 }
 
 void show_date(string file){
+  
   //Recorrer el datos.dat
   ifstream file2(file,ios::binary);
   DataRecord record;
@@ -758,15 +841,35 @@ int main(){
 
 
   //init();
+
   
-  //show_date("datos.dat");
-  //cout<<"\n";
-  /*
   SequentialFile seq;
-  cout<<endl<<endl<<endl;
-  seq.remove(180);
+  Record registro1("Carry7",210,2021,"Computacion");
+
+int a,b,c,d;
+ifstream prueba("datos.dat", ios::binary);
+prueba.seekg(0,ios::beg);
+prueba.read((char*)&a,sizeof(int));
+prueba.read((char*)&b,sizeof(int));
+prueba.read((char*)&c,sizeof(int));
+prueba.read((char*)&d,sizeof(int));
+cout<<a<<" "<<b<<" "<<c<<" "<<d<<"\n\n\n";
+  seq.add(registro1);
+prueba.seekg(0,ios::beg);
+prueba.read((char*)&a,sizeof(int));
+prueba.read((char*)&b,sizeof(int));
+prueba.read((char*)&c,sizeof(int));
+prueba.read((char*)&d,sizeof(int));
+cout<<a<<" "<<b<<" "<<c<<" "<<d<<"\n\n\n";
+
+
+ /*
   show_date("datos.dat");
+  cout<<"\n";
+  show_date("auxiliar.dat");
+  cout<<"\n";
   */
+  
 
  /*
   Record registro1("Joaquin222",115,2021,"Computacion");
@@ -778,7 +881,7 @@ int main(){
   cout<<"\n";
   show_date("datos2.dat");
 */
-
+  
 
   //cout<<"\n";
   //show_date("datos2.dat");
