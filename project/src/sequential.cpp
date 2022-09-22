@@ -4,7 +4,7 @@
 #include <string>
 #include <stdio.h>
 using namespace std;
-#define AuxMax 3
+#define AuxMax 10
 #define Header 16
 
 struct Record{
@@ -101,6 +101,7 @@ public:
   bool remove_register(float key);
   int search_data(int key);
   vector<Record> range_search(int key1, int key2);
+  bool remove_register_binary(float key);
 
   int search_aux(int key);
   Record search(int key);
@@ -234,11 +235,13 @@ SequentialFile::SequentialFile(){
 
 //  Eliminar un registro del datos.dat segun la key
 bool SequentialFile::remove_register(float key){
-  //  Con busqueda sequencial nomas :(
   fstream file(fileName, ios::binary | ios::in | ios::out);
-  fstream file2(fileName, ios::binary | ios::in | ios::out);
-  int pos_buscar = header;
-  int file_buscar = file_header;
+  fstream file2(fileAux, ios::binary | ios::in | ios::out);
+  int pos_buscar;
+  file.seekg(0,ios::beg);
+  file.read((char*)&pos_buscar,sizeof(int));
+  int file_buscar;
+  file.read((char*)&file_buscar,sizeof(int));
   int pos_auxiliar;
   int file_auxiliar;
   DataRecord temp;
@@ -250,12 +253,12 @@ bool SequentialFile::remove_register(float key){
     pos_temp2 = pos_auxiliar;
     pos_auxiliar = pos_buscar;
     file_auxiliar = file_buscar;
-    if(file_header==0){
-      file.seekg(pos_buscar,ios_base::beg);
+    if(file_auxiliar==0){
+      file.seekg(pos_auxiliar,ios_base::beg);
       file.read((char*)&temp,sizeof(temp));
     }
     else{
-      file2.seekg(pos_buscar,ios_base::beg);
+      file2.seekg(pos_auxiliar,ios_base::beg);
       file2.read((char*)&temp,sizeof(temp));
     }
     pos_buscar = temp.next;
@@ -309,6 +312,16 @@ bool SequentialFile::remove_register(float key){
   }
 }
 
+bool SequentialFile::remove_register_binary(float key){
+
+  fstream file(fileName, ios::binary | ios::in | ios::out);
+  fstream file2(fileName, ios::binary | ios::in | ios::out);
+  pair<int,int> p1 ;
+
+
+
+  return true;
+}
 
 int SequentialFile::search_data(int key){
   
@@ -650,7 +663,7 @@ Record SequentialFile::search(int key){
       temp2.Sport = strtok(NULL, "\r");
       return temp2;
       }
-      throw std::runtime_error("error archivo no encontrado\n");
+      throw std::runtime_error("error elemento no encontrado\n");
     }
 }
 
@@ -789,23 +802,85 @@ void show_date(string file){
 }
 
 
-void prueba(){
-  SequentialFile seq;
-  Record reg("Eros8",35,2021,"Computacion");
-  seq.add(reg);
+
+
+void test(){
+SequentialFile seq;
+/*
+//  Mostrar el index
   show_date("datos.dat");
   cout<<"\n\n";
   show_date("auxiliar.dat");
   cout<<"\n\n";
+*/
+
+/*
+//  Agregar
+  Record reg("Eros",109,2021,"Computacion");
+  seq.add(reg);
+  Record reg1("Luis",100,2021,"Computacion");
+  seq.add(reg1);
+  Record reg2("Eros",98,2021,"Computacion");
+  seq.add(reg2);
+  Record reg3("Eros",60,2021,"Computacion");
+  seq.add(reg3);
+  Record reg4("Eros",67,2021,"Computacion");
+  seq.add(reg4);
+  Record reg5("Eros",58,2021,"Computacion");
+  seq.add(reg5);
+  Record reg6("Eros",54,2021,"Computacion");
+  seq.add(reg6);
+//  Mostrar el index
+  show_date("datos.dat");
+  cout<<"\n\n";
+  show_date("auxiliar.dat");
+  cout<<"\n\n";
+*/
+
+/*
+//  Search
+  Record record_search = seq.search(60);
+  record_search.print();
+  record_search = seq.search(180);
+  record_search.print();
+*/
+/*
+  Record record_search = seq.search(35);
+  record_search.print();
+*/
+
+/*
+//  RangeSearch
+  vector<Record> range_record = seq.range_search(110,55);
+  for (auto a:range_record){
+    a.print();
+  }
+  cout<<"\n\n\n";
+  vector<Record> range_record2 = seq.range_search(300,20);
+  for (auto a:range_record2){
+    a.print();
+  }
+*/
+
+
+//  Remove
+  /*
+  seq.remove_register(95);
+  show_date("datos.dat");
+  cout<<"\n\n";
+  show_date("auxiliar.dat");
+  cout<<"\n\n";
+  */
+  /*
+  seq.remove_register(82);
+  show_date("datos.dat");
+  cout<<"\n\n";
+  show_date("auxiliar.dat");
+  cout<<"\n\n";
+  */
+  
 }
-
-void test(){
-
-
-}
-
 
 int main(){
-  //test();
-  init();
+  test();
 }
