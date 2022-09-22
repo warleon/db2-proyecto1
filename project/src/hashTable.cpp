@@ -5,8 +5,6 @@
 #define LAST(k, n) ((k) & ((1 << (n)) - 1))
 #define MID(k, m, n) LAST((k) >> (m), ((n) - (m)))
 
-#include <iostream>
-
 ExtendibleHash::ExtendibleHash(fs::path home, size_t bucketSize,
                                size_t poolSize)
     : dirName(home),
@@ -52,6 +50,7 @@ ExtendibleHash::queryResult_t ExtendibleHash::search(
   hash_t nk = keyToHash(key);
   size_t index = hashToIndex(nk);
   bucket* buc = pool.fetch(directory[index]);
+  buc->checkKey(key);
   return buc->buffer[key];
 }
 
@@ -68,34 +67,57 @@ void ExtendibleHash::add(recordMeta meta, key_t key) {
     pool.setDirty(oid);
     return;
   }
-  buc->localDeph++;
   pool_t::bucketId_t nid = pool.create();
   bucket* nbuc = pool.fetch(nid);
-  nbuc->localDeph = buc->localDeph;
-  auto buff = std::move(buc->buffer);
-  if (buc->localDeph > globalDepth) {
-    doubleCapacity();
-    size_t nbindex =  // TODO fix index calculation
-        directory[index << 1] == oid ? (index << 1) : (index << 1) + 1;
-    directory[nbindex] = nid;
-  } else {
-    // TODO else handle insertion of new bucket
-  }
+  nbuc->localDepth = ++(buc->localDepth);
 
-  add(meta, key);
-  for (auto& it : buff) {
-    add(it.second, it.first);
+  bucket::buffer_t buff(buc->buffer.begin(), buc->buffer.end());
+
+  buc->buffer.clear();
+  nbuc->buffer.clear();
+
+  buff[key] = meta;
+
+  size_t nbindex;
+  if (buc->localDepth > globalDepth) {
+    doubleCapacity();
+    nbindex = index << 1;
+  } else {
+    nbindex = index;
   }
+  directory[nbindex] = nid;
+  for (auto it = buff.begin(); it != buff.end(); it++) {
+    add(it->second, it->first);
+  }
+}
+bucket::buffer_t::iterator ExtendibleHash::distribute(bucket::buffer_t& buff,
+                                                      bucket* b1, bucket* b2) {
+  bool inserted = false;
+  auto it = buff.begin();
+  for (; it != buff.end(); it++) {
+    // hash again
+    auto nk = keyToHash(it->first);
+    auto index =
+        MID(nk, sizeof(nk) - globalDepth - 1, sizeof(nk) - globalDepth);
+    if (index)
+      inserted = b1->add(it->first, it->second);
+    else
+      inserted = b2->add(it->first, it->second);
+
+    if (!inserted) {
+      break;
+    }
+  }
+  it = buff.erase(buff.begin(), it);
+
+  return it;
 }
 
 void ExtendibleHash::doubleCapacity() {
-  globalDepth = globalDepth << 1;
-  auto temp = std::move(directory);
-  directory.resize(2 << globalDepth);
-  for (auto& it : temp) {
-    for (size_t i = 0; i < 2; i++) {
-      directory.push_back(it);
-    }
+  ++globalDepth;
+  directory.resize(1 << globalDepth);
+  for (size_t i = directory.size() - 1; i > 0; --i) {
+    directory[i] = directory[i >> 1];
   }
 }
 
@@ -109,26 +131,38 @@ void ExtendibleHash::remove(key_t key) {
 }
 
 void ExtendibleHash::index(std::string infoFile, std::string dataFile,
-                           size_t keyPos) {
+                           ExtendibleHash::keySet_t keyPos) {
   std::ifstream info(infoFile, std::ios::binary);
   std::ifstream data(dataFile, std::ios::binary);
   if (!(info.good() && data.good()))
     throw std::runtime_error("can't index unexisting files");
   GenRecordInfo tempInfo;
   size_t off = 0;
+  Record rec = nullptr;
   while (info >> tempInfo) {
     if (!info.good()) break;
-    Record* rec = tempInfo.allocate(1);
-    tempInfo.read(rec, 1, data);
-    add({off, tempInfo}, getKey(tempInfo.at(rec, 0), tempInfo, keyPos));
+    rec = (Record)tempInfo.allocate(1);
+    data.read(rec, tempInfo.getSize());
+    add({off, tempInfo}, getKey(rec, tempInfo, keyPos));
     off += tempInfo.getSize();
-    tempInfo.deallocate(rec);
+    delete[] rec;
+    rec = nullptr;
   }
 }
 
 ExtendibleHash::key_t ExtendibleHash::getKey(Record rec, GenRecordInfo info,
-                                             size_t keyPos) {
-  char* field = info.field(rec, keyPos);
-
-  return key_t(field, field + info.fieldSize(keyPos));
+                                             ExtendibleHash::keySet_t keyPos) {
+  size_t totalSize = 0;
+  for (auto key : keyPos) {
+    totalSize += info.fieldSize(key);
+  }
+  char* field = new char[totalSize];
+  size_t i = 0;
+  for (auto key : keyPos) {
+    memcpy(&field[i], info.field(rec, key), info.fieldSize(key));
+    i += info.fieldSize(key);
+  }
+  auto res = key_t(field, field + totalSize);
+  delete[] field;
+  return res;
 }

@@ -1,7 +1,6 @@
 #include "genRecord.hpp"
 
 #include <exception>
-#include <iostream>
 #include <utility>
 
 void bytesToInt8(const char* from, char* to, size_t n) {
@@ -99,7 +98,7 @@ GenRecordInfo GenRecordInfo::readInfo(std::ifstream& infoFile,
 size_t GenRecordInfo::getSize() { return size; }
 
 Record* GenRecordInfo::allocate(size_t n) {
-  return (Record*)std::memset(new char[n * size], 0, size* n);
+  return (Record*)new char[n * size]{};
 }
 void GenRecordInfo::write(Record* records, size_t n, std::ofstream& out) {
   out.write((char*)records, n * size);

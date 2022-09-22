@@ -1,10 +1,9 @@
 #include "csvReader.hpp"
 
-CSV::CSV(std::string fn)
+CSV::CSV(std::string fn, std::string sep)
     : record(""), header(nullptr), line(nullptr), file(fn) {
   if (!file.good()) throw std::runtime_error("filename does not exists");
-  readPage();
-  parseLine();
+  parseLine(sep.c_str());
   header = line;
   line = nullptr;
   headerInfo = lineInfo;
@@ -16,31 +15,23 @@ CSV::~CSV() {
   if (line) delete[] line;
   line = nullptr;
 }
-void CSV::readPage() {
-  memset(buffer, 0, pageSize);
-  file.read(buffer, pageSize);
-}
-void CSV::parseLine(const char* sep) {
+bool CSV::parseLine(const char* sep) {
   if (line) {
     delete[] line;
     line = nullptr;
+    lineInfo = {};
   }
-  char* ptr = strtok(buffer, "\n");
-  if (!ptr) {
-    record += buffer;
-    readPage();
-    return parseLine(sep);
-  } else {
-    record = ptr;
-  }
-  // here a complete line has been readed into record
+  if (file.good())
+    std::getline(file, record);
+  else
+    return false;
 
   std::vector<dtype> recType;
   std::vector<size_t> recSize;
   std::vector<char*> tokens;
 
   auto size = record.size();
-  char* recBuff = strncpy(new char[size], record.c_str(), size);
+  char* recBuff = strncpy(new char[size + 1]{}, record.c_str(), size);
 
   for (char* token = strtok(recBuff, sep); token;
        token = strtok(nullptr, sep)) {
@@ -49,7 +40,6 @@ void CSV::parseLine(const char* sep) {
     recType.push_back(meta.first);
     recSize.push_back(meta.second);
   }
-  // build info
   lineInfo = GenRecordInfo(recType, recSize);
   // build line
   line = (Record)lineInfo.allocate(1);
@@ -58,16 +48,15 @@ void CSV::parseLine(const char* sep) {
     castToken(lineInfo.field(line, i), token, i);
   }
 
-  // reset record;
-  record = "";
   delete[] recBuff;
+  return true;
 }
 std::pair<dtype, size_t> CSV::parseToken(char* token) {
   dtype type = dtype::int64;
   size_t size = 0;
-  for (; token[size]; size++) {
+  for (; token[size]; ++size) {
     auto c = token[size];
-    if (isalpha(c) || type == dtype::int8) {
+    if (isalpha(c) || isblank(c) || type == dtype::int8) {
       type = dtype::int8;
     } else if (isdigit(c) && (type == dtype::int64 || type == dtype::float64)) {
       ;
@@ -79,7 +68,7 @@ std::pair<dtype, size_t> CSV::parseToken(char* token) {
     }
   }
 
-  return std::make_pair(type, type == dtype::int8 ? size : 1);
+  return std::make_pair(type, type == dtype::int8 ? size + 1 : 1);
 }
 void CSV::castToken(char* field, char* token, size_t i) {
   auto size = lineInfo.fieldItemsCount[i];
