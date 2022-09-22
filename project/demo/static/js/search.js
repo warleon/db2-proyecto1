@@ -10,4 +10,6 @@ $("#mainForm").submit(() => {
 		error: (err) => { console.log(err); }
 	};
 	$.ajax(config);
-}); 
+});
+
+$("#addField").click(() => { $("<input type=\"text\" placeholder=\"field\"></>").insertBefore($("#addField")); });
