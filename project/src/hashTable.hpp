@@ -27,8 +27,6 @@ class ExtendibleHash {
   std::hash<key_t> keyToHash;
   size_t hashToIndex(hash_t);
   void doubleCapacity();
-  // size_t sibling(size_t);
-  size_t siblingAfterDoubling(size_t);
   bucket::buffer_t::iterator distribute(bucket::buffer_t&, bucket*, bucket*);
 
  public:

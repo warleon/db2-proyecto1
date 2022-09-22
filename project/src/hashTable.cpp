@@ -67,36 +67,28 @@ void ExtendibleHash::add(recordMeta meta, key_t key) {
     pool.setDirty(oid);
     return;
   }
-  bucket::buffer_t buff;
-  do {
-    pool_t::bucketId_t nid = pool.create();
-    bucket* nbuc = pool.fetch(nid);
-    nbuc->localDepth = ++(buc->localDepth);
-    buff.insert(buc->buffer.begin(), buc->buffer.end());
-    // just in case
-    buc->buffer.clear();
-    nbuc->buffer.clear();
+  pool_t::bucketId_t nid = pool.create();
+  bucket* nbuc = pool.fetch(nid);
+  nbuc->localDepth = ++(buc->localDepth);
 
-    buff[key] = meta;
+  bucket::buffer_t buff(buc->buffer.begin(), buc->buffer.end());
 
-    size_t nbindex;
-    if (buc->localDepth > globalDepth) {
-      doubleCapacity();
-      nbindex = siblingAfterDoubling(index);
-    } else {
-      nbindex = index;
-    }
-    directory[nbindex] = nid;
+  buc->buffer.clear();
+  nbuc->buffer.clear();
 
-    auto it = distribute(buff, buc, nbuc);
+  buff[key] = meta;
 
-    pool.setDirty(oid);
-    pool.setDirty(nid);
-    // if all inserted
-    if (it == buff.end()) {
-      break;
-    }
-  } while (1);
+  size_t nbindex;
+  if (buc->localDepth > globalDepth) {
+    doubleCapacity();
+    nbindex = index << 1;
+  } else {
+    nbindex = index;
+  }
+  directory[nbindex] = nid;
+  for (auto it = buff.begin(); it != buff.end(); it++) {
+    add(it->second, it->first);
+  }
 }
 bucket::buffer_t::iterator ExtendibleHash::distribute(bucket::buffer_t& buff,
                                                       bucket* b1, bucket* b2) {
@@ -123,11 +115,9 @@ bucket::buffer_t::iterator ExtendibleHash::distribute(bucket::buffer_t& buff,
 
 void ExtendibleHash::doubleCapacity() {
   ++globalDepth;
-  // auto temp = std::move(directory);
   directory.resize(1 << globalDepth);
-  for (size_t i = directory.size() - 1; i >= 0; --i) {
+  for (size_t i = directory.size() - 1; i > 0; --i) {
     directory[i] = directory[i >> 1];
-    if (!i) break;
   }
 }
 
@@ -166,4 +156,3 @@ ExtendibleHash::key_t ExtendibleHash::getKey(Record rec, GenRecordInfo info,
 
   return key_t(field, field + info.fieldSize(keyPos));
 }
-size_t ExtendibleHash::siblingAfterDoubling(size_t pos) { return (pos << 1); }
