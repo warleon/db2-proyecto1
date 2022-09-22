@@ -99,8 +99,7 @@ TEST(HashTable, resizeTest_0) {
   CSV csv(csvPath);
   std::ofstream info(infoFilePath, std::ios::binary);
   std::ofstream data(dataFilePath, std::ios::binary);
-  for (size_t i = 0; i < 100; i++) {
-    csv.parseLine(",");
+  while (csv.parseLine(",")) {
     info << csv.lineInfo;
     data.write(csv.line, csv.lineInfo.getSize());
   }
@@ -114,8 +113,9 @@ TEST(HashTable, searchTest_1) {
   CSV csv(csvPath);
   ExtendibleHash index(hashHome / "resize");
 
-  for (size_t recordIndex = 0; recordIndex < 100; recordIndex++) {
-    csv.parseLine(",");
+  size_t recordIndex = 0;
+  while (csv.parseLine(",")) {
+    recordIndex++;
     auto key = index.getKey(csv.line, csv.lineInfo, 0);
     std::cerr << "search for record " << recordIndex << std::endl;
     std::cerr << "record key = " << key << std::endl;
@@ -128,10 +128,6 @@ TEST(HashTable, searchTest_1) {
     data.seekg(meta.pos);
     Record rec = (Record)csv.lineInfo.allocate(1);
     data.read(rec, csv.lineInfo.getSize());
-    (std::cerr << "found record [|").write(rec, meta.info.getSize())
-        << "|]" << std::endl;
-    (std::cerr << "expected record [|").write(csv.line, csv.lineInfo.getSize())
-        << "|]" << std::endl;
     EXPECT_EQ(strncmp(rec, csv.line, csv.lineInfo.getSize()), 0);
     delete[] rec;
   }
