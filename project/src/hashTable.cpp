@@ -131,7 +131,7 @@ void ExtendibleHash::remove(key_t key) {
 }
 
 void ExtendibleHash::index(std::string infoFile, std::string dataFile,
-                           size_t keyPos) {
+                           ExtendibleHash::keySet_t keyPos) {
   std::ifstream info(infoFile, std::ios::binary);
   std::ifstream data(dataFile, std::ios::binary);
   if (!(info.good() && data.good()))
@@ -151,8 +151,18 @@ void ExtendibleHash::index(std::string infoFile, std::string dataFile,
 }
 
 ExtendibleHash::key_t ExtendibleHash::getKey(Record rec, GenRecordInfo info,
-                                             size_t keyPos) {
-  char* field = info.field(rec, keyPos);
-
-  return key_t(field, field + info.fieldSize(keyPos));
+                                             ExtendibleHash::keySet_t keyPos) {
+  size_t totalSize = 0;
+  for (auto key : keyPos) {
+    totalSize += info.fieldSize(key);
+  }
+  char* field = new char[totalSize];
+  size_t i = 0;
+  for (auto key : keyPos) {
+    memcpy(&field[i], info.field(rec, key), info.fieldSize(key));
+    i += info.fieldSize(key);
+  }
+  auto res = key_t(field, field + totalSize);
+  delete[] field;
+  return res;
 }

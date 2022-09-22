@@ -44,7 +44,7 @@ TEST(HashTable, indexTest_0) {
   infoOut << info << info;
   infoOut.close();
   data.close();
-  index.index(infoFilePath, dataFilePath, 0);
+  index.index(infoFilePath, dataFilePath, {0});
   info.deallocate(recs);
 }
 TEST(HashTable, indexTest_1) {
@@ -60,7 +60,7 @@ TEST(HashTable, indexTest_1) {
   infoOut << info << info;
   infoOut.close();
   data.close();
-  index.index(infoFilePath, dataFilePath, 1);
+  index.index(infoFilePath, dataFilePath, {1});
   info.deallocate(recs);
 }
 
@@ -68,7 +68,7 @@ TEST(HashTable, searchTest_0) {
   ExtendibleHash index(hashHome / "test1");
   auto recs = info.allocate(2);
   setData(info.at(recs, 0), info);
-  auto key = index.getKey(info.at(recs, 0), info, 1);
+  auto key = index.getKey(info.at(recs, 0), info, {1});
   auto meta = index.search(key);
   EXPECT_TRUE(meta.info.getSize() == info.getSize());
   std::ifstream data(dataFilePath, std::ios::binary);
@@ -83,7 +83,7 @@ TEST(HashTable, removeTest_0) {
   ExtendibleHash index(hashHome / "test1");
   auto recs = info.allocate(1);
   setData(info.at(recs, 0), info);
-  auto key = index.getKey(info.at(recs, 0), info, 1);
+  auto key = index.getKey(info.at(recs, 0), info, {1});
   info.deallocate(recs);
   EXPECT_NO_THROW(index.remove(key));
 }
@@ -91,7 +91,7 @@ TEST(HashTable, removeTest_1) {
   ExtendibleHash index(hashHome / "test1");
   auto recs = info.allocate(1);
   setData(info.at(recs, 0), info);
-  auto key = index.getKey(info.at(recs, 0), info, 1);
+  auto key = index.getKey(info.at(recs, 0), info, {1});
   info.deallocate(recs);
   EXPECT_ANY_THROW(index.remove(key));
 }
@@ -107,7 +107,7 @@ TEST(HashTable, resizeTest_0) {
   info.close();
   data.close();
   ExtendibleHash index(hashHome / "resize");
-  index.index(infoFilePath, dataFilePath, 0);
+  index.index(infoFilePath, dataFilePath, {0, 2, 3});
 }
 TEST(HashTable, searchTest_1) {
   CSV csv(csvPath);
@@ -116,7 +116,7 @@ TEST(HashTable, searchTest_1) {
   size_t recordIndex = 0;
   while (csv.parseLine(",")) {
     recordIndex++;
-    auto key = index.getKey(csv.line, csv.lineInfo, 0);
+    auto key = index.getKey(csv.line, csv.lineInfo, {0, 2, 3});
     std::cerr << "search for record " << recordIndex << std::endl;
     std::cerr << "record key = " << key << std::endl;
     auto meta = index.search(key);

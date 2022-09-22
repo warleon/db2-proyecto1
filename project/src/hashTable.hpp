@@ -12,6 +12,7 @@
 class ExtendibleHash {
   using hash_t = size_t;
   using key_t = bucket::key_t;
+  using keySet_t = std::vector<size_t>;
   using queryResult_t = recordMeta;
   using pool_t = BucketPool<bucket>;
 
@@ -36,11 +37,11 @@ class ExtendibleHash {
   friend std::istream& operator>>(std::istream&, ExtendibleHash&);
 
   // generates a key from the record
-  key_t getKey(Record, GenRecordInfo, size_t);
+  key_t getKey(Record, GenRecordInfo, keySet_t);
 
   // indexes general records with a file of GenRecords  a file with their
   // corresponding records and the key position in the record info
-  void index(std::string, std::string, size_t);
+  void index(std::string, std::string, keySet_t);
 
   queryResult_t search(key_t);
   void add(recordMeta, key_t);
