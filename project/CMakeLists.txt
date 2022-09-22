@@ -25,6 +25,7 @@ set($ENV{$CTEST_OUTPUT_ON_FAILURE} 1)
 include_directories(src libs)
 link_directories(src libs)
 
+
 enable_testing()
 
 #--------------------------------GENERAL RECORD------------------------------------------#
@@ -81,5 +82,6 @@ gtest_discover_tests(bucketPool)
 #----------------------------DEMO----------------------------------------------#
 add_executable(
   program 
-  src/main.cpp
+  demo/main.cpp
 )
+#file(COPY demo/static DESTINATION .)

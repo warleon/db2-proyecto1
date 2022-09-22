@@ -4,6 +4,7 @@ services:
     volumes:
       - ./project:/project
       - ./data:/data
+      - ./project/demo/static:/static
     working_dir: /project
     ports:
       - 80:80
