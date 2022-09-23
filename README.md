@@ -44,8 +44,8 @@ La complejidad de este algoritmo es log(N), ya que marca como eliminado este reg
 Propuesta por RONALD FAGIN, JURG NIEVERGELT,  NICHOLAS PIPPENGER y H. RAYMOND STRONG en el paper [Extendible Hashing A Fast Access
 Method for Dynamic Files](https://dl.acm.org/doi/pdf/10.1145/320083.320092).
 Es una estructura de datos para disco que almacena pares llave-valor en disco y garantiza el acceso a estos en no mas de 2 accesos a disco. Esto es posible gracias a la respuesta a dos preguntas:
-- ¿Como hacer un trie valanceado?
-- ¿Como hacer una tabla hash que se pueda redimencionar sin rehasear todos los elementos?  
+- ¿Como hacer un TRIE valanceado?
+- ¿Como hacer una TABLA HASH que se pueda redimencionar sin rehasear todos los elementos?  
 
 En el paper indagan en la solucion a estas preguntas asi que aqui simplemente nos limitaremos a explicar nuestra implementacion a continuacion.
 
@@ -60,18 +60,59 @@ Una ves hallamos escrito el registro a un archivo este estara en una poscion o d
 #### **Llave**
 Dada la simplesa de nuestro Registro General las llaves usadas en esta implementacion son de tipo STRING. Esto nos permite tambien concatenar campos de un registro para de forma trivial soportar llaves compuestas.
 #### **Balde o Contenedor**
-Un conjunto de pares Llave-Metadata con un tamaño maximo fijo.
+Un conjunto de pares Llave-Metadata con un tamaño maximo fijo. Asi como tambien un numero que indica la PROFUNDIDAD_LOCAL
 #### **Piscina de Baldes**
 Interfaz que se encarga de leer o escribir baldes de disco segun se requiera. Actua tambien como cache en memoria de los baldes cargados previamente. Y facilita la implentacion del Extendible Hash
 #### **Funcion Hash**
 Dado que nuestro tipo de llave es un STRING simplemente usamos el HASH estandar que provee c++.
 #### **Directorio**
+Un VECTOR de IDs de Baldes generados por la Piscina. Es el resultado de colapsar un TRIE de cadenas binarias y replicar las hojas que no hallan estado en la maxima profundidad.
 #### **Extendible Hash**
+La estructura principal consta de un DIRECTORIO y una Piscina de Baldes e implementa las siguientes operaciones. Asi como tambien un numero que indica la PROFUNDIDAD_GLOBAL. El DIRECTORIO completo permanece en memoria durante todo el tiempo de vida del Extendible Hash.
 ### **Operaciones**
+A continuacion un pseudocodigo de las operaciones
 #### **Busqueda**
+0. Dada una LLAVE  
+1. Aplicar la funcion hash a la LLAVE para obtener el HASH  
+1. Extraer los PROFUNDIDAD_GLOBAL BITS mas significativos del HASH  
+1. Interpretar los BITS como como un entero. Este sera el INDICE  
+1. Obtener el ID del balde que se encuentra en DIRECTORIO\[INDICE\]  
+1. Leer de disco el BALDE al que le corresponde la ID  
+1. Buscar en el BALDE la METADATA correspondiente al la LLAVE y retornarla
 #### **Insercion**
+0. Dada una LLAVE y una METADATA
+1. Aplicar los pasos de la Busqueda del 1 al 5 inclusivo para obtener el BALDE y su INDICE
+1. Si el BALDE no esta lleno insertar el par LLAVE-METADATA y retornar
+1. Si ya esta lleno crear un NUEVO_BALDE y asignar la PROFUNDIDAD_LOCAL de ambos baldes a la PROFUNDIDAD_LOCAL + 1 de BALDE
+1. **Mover** el contenido del BALDE a un BUFFER auxiliar junto con el par LLAVE-METADATA
+1. Si la nueva PROFUNDIDAD_LOCAL supera la PROFUNDIDAD_GLOBAL ejecutar Doblamiento y asignar el id de NUEVO_BALDE a DIRECTORIO\[INDICE*2\]
+1. Si no asignar el id de NUEVO_BALDE a DIRECTORIO\[INDICE\]
+1. Reinsertar de forma recursiva el contenido de BUFFER
 ##### **Doblamiento**
+1. Incrementa la PROFUNDIDAD_GLOBAL en 1
+1. Extender el DIRECTORIO a un tamaño de $2^{PROFUNDIDAD\_GLOBAL}$
+1. Iterar desde el ultimo INDICE del direcorio hasta 0 y asignar a DIRECTORIO\[INDICE\] el ID en DIRECTORIO\[INDICE/2\]
 #### **Eliminacion**
+0. Dada una LLAVE 
+1. Aplicar los pasos de la Busqueda del 1 al 5 inclusivo para obtener el BALDE
+1. Eliminar el par LLAVE-METADATA en BALDE y retornar
+#### **Indexacion**
+0. Dado un **archivo con Informacion de Registros** , un **archivo con Registros** y un **conjunto de enteros que indican los campos forman la llave**
+1. Mientras no se terminen de leer los archivos
+1. Obtener la POSICION actual de lectura
+1. Leer la INFORMACION de Registro y su REGISTRO respectivo
+1. Construir una METADATA con la POSICION y INFORMACION obtenida
+2. Usar la INFORMACION y el REGISTRO para generar una LLAVE concatenando los campos indicados
+1. Ejecutar Insertar LLAVE METADATA
+### **Analisis de Complejidad** (En accesos a disco)
+#### **Busqueda**
+Sabiendo que el DIRECTORIO en su totalidad permanece en memoria ram. La unica interacion con el disco que se realiza es la lectura y escritura del balde.  
+Si bien el Balde tien una cantidad maxima fija de pares llave-metadata estos pares son de tamaño variable.
+Dando como resultado una complejidad de O(n) donde n es la cantidad de paginas que ocupa el Balde. Aunque de imponerse un tamaño fijo en los campos del Registro y por ende en las llaves esta complejidad se volveria O(1).
+#### **Eliminacion**
+Mismo argumento y complejidad que la Busqueda
+#### **Insercion**
+
 #### **Indexacion**
 
 
