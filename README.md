@@ -41,12 +41,15 @@ La funcion eliminar consiste en buscar un registro apartir de su key y marcarlo 
 La complejidad de este algoritmo es log(N), ya que marca como eliminado este registro y actualiza los punteros correspondientes. 
 
 ### Cuadro de tiempo del Sequential File Busqueda
-| | | | | |
-| :-------------------: | --- | --- | --- | --- | --- |
+| | | | |
+| :-------------------: | --- | --- | --- | --- |
 | | 100 registros | 500 registros | 1000 registros | 1500 registros |
 | Sequential File | 0,001 | 0,0015 | 0,00211 | 0,003 | 
 
 ### Cuadro de tiempo del Sequential File add
+
+| | 100 registros | 500 registros | 1000 registros | 1500 registros |
+| Sequential File | 0,001 | 0,003 | 0,004 | 0,005 | 
 
 ## **Extendible Hash**
 Propuesta por RONALD FAGIN, JURG NIEVERGELT,  NICHOLAS PIPPENGER y H. RAYMOND STRONG en el paper [Extendible Hashing A Fast Access
