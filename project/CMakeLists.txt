@@ -84,4 +84,3 @@ add_executable(
   program 
   demo/main.cpp
 )
-#file(COPY demo/static DESTINATION .)
