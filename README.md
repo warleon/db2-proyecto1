@@ -56,7 +56,7 @@ Propuesta por RONALD FAGIN, JURG NIEVERGELT,  NICHOLAS PIPPENGER y H. RAYMOND ST
 Method for Dynamic Files](https://dl.acm.org/doi/pdf/10.1145/320083.320092).
 Es una estructura de datos para disco que almacena pares llave-valor en disco y garantiza el acceso a estos en no mas de 2 accesos a disco. Esto es posible gracias a la respuesta a dos preguntas:
 - ¿Como hacer un TRIE valanceado?
-- ¿Como hacer una TABLA HASH que se pueda redimencionar sin rehasear todos los elementos?  
+- ¿Como hacer una TABLA HASH que se pueda redimencionar sin rehashear todos los elementos?  
 
 En el paper indagan en la solucion a estas preguntas asi que aqui simplemente nos limitaremos a explicar nuestra implementacion a continuacion.
 
@@ -97,7 +97,7 @@ A continuacion un pseudocodigo de las operaciones
 1. Si ya esta lleno crear un NUEVO_BALDE y asignar la PROFUNDIDAD_LOCAL de ambos baldes a la PROFUNDIDAD_LOCAL + 1 de BALDE
 1. **Mover** el contenido del BALDE a un BUFFER auxiliar junto con el par LLAVE-METADATA
 1. Si la nueva PROFUNDIDAD_LOCAL supera la PROFUNDIDAD_GLOBAL ejecutar Doblamiento y asignar el id de NUEVO_BALDE a DIRECTORIO\[INDICE*2\]
-1. Si no asignar el id de NUEVO_BALDE a DIRECTORIO\[INDICE\]
+1. Sino asignar el id de NUEVO_BALDE a DIRECTORIO\[INDICE\]
 1. Reinsertar de forma recursiva el contenido de BUFFER
 ##### **Doblamiento**
 1. Incrementa la PROFUNDIDAD_GLOBAL en 1
@@ -119,15 +119,21 @@ A continuacion un pseudocodigo de las operaciones
 #### **Busqueda**
 Sabiendo que el DIRECTORIO en su totalidad permanece en memoria ram. La unica interacion con el disco que se realiza es la lectura y escritura del balde.  
 Si bien el Balde tien una cantidad maxima fija de pares llave-metadata estos pares son de tamaño variable.
-Dando como resultado una complejidad de O(n) donde n es la cantidad de paginas que ocupa el Balde. Aunque de imponerse un tamaño fijo en los campos del Registro y por ende en las llaves esta complejidad se volveria O(1).
+Dando como resultado una complejidad de $O(n)$ donde n es la cantidad de paginas que ocupa el Balde. Aunque de imponerse un tamaño fijo en los campos del Registro y por ende en las llaves esta complejidad se volveria $O(1)$.
 #### **Eliminacion**
 Mismo argumento y complejidad que la Busqueda
 #### **Insercion**
-
+La complejidad es igual a la de Busqueda cuando el Balde no esta completamente lleno bajo el mismo argumento.  
+Cuando se tiene que crear un nuevo Balde se realiza una lectura mas.  
+En caso se tenga de hacer uno o mas Doblamientos (plural en caso que las inserciones recursivas requieran doblar el Directorio) eso no agregaria ningun acceso a disco.  
+En cuanto a las Inserciones recursivas estas agregarian tantos accesos a disco como sobrecargas generen ya que cada sobrecarga requiere la creacion de un nuevo Balde.  
+Notese que el numero de lecturas y escrituras de Baldes es igual al numero de sobrecargas porque la Piscina funciona como cache eliminando asi las multiples escrituras a disco causadas por modificaciones parciales de los baldes.  
+Dando como resultado un $O(m*n)$ donde m es la cantidad de sobrecargas generadas y n el numero de paginas que ocupa un balde mas grande.
 #### **Indexacion**
+Dado que la indexacion genera k inserciones donde k es el numero de registros su complejidad es simplemente $O(k*m*n)$
 
 
-# **to run**
+# **How to run**
 create a build dir in the project folder
 ```
 mkdir project/build
