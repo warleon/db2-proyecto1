@@ -3,10 +3,10 @@
 # db2-proyecto1
  proyecto1 de db2
 ## **Integrantes**
-*Aguilar, Anthony
-*Carhuancho, Eros
-*Chahua, Luis
-*Ángeles, Jean
+* Aguilar, Anthony
+* Carhuancho, Eros
+* Chahua, Luis
+* Ángeles, Jean
 
 ## **Objetivo del proyecto**
 El objetivo principal del proyecto es diseñar técnicas de organización de archivos en la memoria secundaria mediante la implementación de las funciones principales de inserción, deleción y búsqueda y asímismo realizar una comparación experimental entre estas técnicas.
