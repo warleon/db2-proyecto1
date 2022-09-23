@@ -3,6 +3,7 @@
 #include <bits/stdc++.h>
 #include <string>
 #include <stdio.h>
+#include <time.h>
 using namespace std;
 #define AuxMax 10
 #define Header 16
@@ -312,16 +313,6 @@ bool SequentialFile::remove_register(float key){
   }
 }
 
-bool SequentialFile::remove_register_binary(float key){
-
-  fstream file(fileName, ios::binary | ios::in | ios::out);
-  fstream file2(fileName, ios::binary | ios::in | ios::out);
-  pair<int,int> p1 ;
-
-
-
-  return true;
-}
 
 int SequentialFile::search_data(int key){
   
@@ -524,9 +515,6 @@ pair<int,int> SequentialFile::search_data_next(int key){  // retorna (pos_indice
 }
 
 
-
-
-
 int SequentialFile::search_aux(int key){
   fstream file(fileAux, ios::binary | ios::in | ios::out);
   if(file.is_open()){
@@ -634,6 +622,7 @@ Record SequentialFile::search(int key){
     Record temp2;
     string line;
     if(pos>=0){
+      //Leer en el csv y construir el Record
       ifstream file(fileName, ios::binary);
       ifstream file2(fileCsv, ios::binary);
       file.seekg(pos*sizeof(DataRecord)+16,ios_base::beg);
@@ -820,15 +809,15 @@ SequentialFile seq;
   seq.add(reg);
   Record reg1("Luis",100,2021,"Computacion");
   seq.add(reg1);
-  Record reg2("Eros",98,2021,"Computacion");
+  Record reg2("Jose",98,2021,"Computacion");
   seq.add(reg2);
-  Record reg3("Eros",60,2021,"Computacion");
+  Record reg3("Alberto",60,2021,"Computacion");
   seq.add(reg3);
-  Record reg4("Eros",67,2021,"Computacion");
+  Record reg4("Juan",67,2021,"Computacion");
   seq.add(reg4);
-  Record reg5("Eros",58,2021,"Computacion");
+  Record reg5("Heider",58,2021,"Computacion");
   seq.add(reg5);
-  Record reg6("Eros",54,2021,"Computacion");
+  Record reg6("Bellido",54,2021,"Computacion");
   seq.add(reg6);
 //  Mostrar el index
   show_date("datos.dat");
@@ -881,6 +870,31 @@ SequentialFile seq;
   
 }
 
+void time_search(){
+  SequentialFile seq;
+  clock_t t;
+  t = clock();
+  Record record_search = seq.search(78);
+  record_search.print();
+  t = clock() - t;
+  double time_taken = ((double)t) / CLOCKS_PER_SEC;
+  printf("El programa tomo %.8f segundos en buscar el rango de registros", time_taken);
+}
+
+void time_insert(){
+  SequentialFile seq;
+  clock_t t;
+  t = clock();
+  Record reg("Eros",109,2021,"Computacion");
+  seq.add(reg);
+  t = clock() - t;
+  double time_taken = ((double)t) / CLOCKS_PER_SEC;
+  printf("El programa tomo %.8f segundos en agregar el registro", time_taken);
+}
+
+
+
 int main(){
-  test();
+  //time_search();
+  //time_insert();
 }
