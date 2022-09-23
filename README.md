@@ -145,4 +145,4 @@ sudo docker-compose up --build
 
 # video
 presentation/Final.mp4   
-[link al video](https://youtu.be/I1DxJ8S9piM)
+[link al video ](https://youtu.be/I1DxJ8S9piM)
