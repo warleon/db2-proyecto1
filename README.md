@@ -19,7 +19,7 @@ Se espera comprobar la funcionalidad y la eficiencia de las técnicas utilizando
 
 ## **Sequential File**
 Esta técnica de organización de archivos refiere a que los registros se irán almacenando de manera ordenada en un archivo principal. Además, las inserciones de registros se colocaran en un archivo auxiliar pero se mantendrá el orden de los keys de los registros mediante los punteros. 
-
+## **Extendible Hash**
 # to run
 create a build dir in the project folder
 ```
