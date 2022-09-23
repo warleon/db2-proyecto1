@@ -31,10 +31,11 @@ La complejidad es O(log(N) + M) para el caso de la búsqueda de un key específi
 
 ### Add
 La función de agregar un registro consta en dos casos el primero de estos se da cuando aún hay espacio en el auxiliar.dat y se inserta al final de este archivo. Posteriormente se actualizan los punteros del registro anterior hacia este y los punteros del registro actual hacia uno menor. El segundo caso se da cuando no hay espacio en el auxiliar.dat y se tiene que realizar una reconstrucción. Esta reconstrucción consiste en combinar los registros de los dos archivos en uno solo insertandolo en un nuevo archivo pero de manera ordenada y al mismo tiempo actualizando sus punteros. Finalmente el último registro sera insertado en el auxiliar.
+La complejidad de este algoritmo es de O(N+M) cuando se realiza una reconstrución si N y M los tamaños de datos.dat y auxiliar.dat respectivamente. En el caso de tener espacio en el auxiliar la complejidad algoritmica es de O(lgN), ya que actuliza los punteros del registro y los punteros que a señalan a este registro.
 
 ### Eliminar
 La funcion eliminar consiste en buscar un registro apartir de su key y marcarlo como eliminado. Posteriormente se actulizan los punteros del anterior que apuntaban a este y ahora puntaran al siguiente al siguiente que el registro eliminado apuntaba. Se concluye que este registro estara ailado de los demas y que solo apuntaran a registros que estan eliminados para posteriormente ignorarlos para la reconstrucción.
-
+La complejidad de este algoritmo es log(N), ya que marca como eliminado este registro y actualiza los punteros correspondientes. 
 
 ## **Extendible Hash**
 # to run
