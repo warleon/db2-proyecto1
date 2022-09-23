@@ -8,8 +8,11 @@
 * Chahua, Luis
 * Ángeles, Jean
 
+### **Disclaimer**
+- Devido a las limitacion de los teclados de algunos integrantes algunas de las palabras en el siguiente informe que deberian tener tilde no la poseen.
+
 ## **Objetivo del proyecto**
-El objetivo principal del proyecto es diseñar técnicas de organización de archivos en la memoria secundaria mediante la implementación de las funciones principales de inserción, deleción y búsqueda y asimismo realizar una comparación experimental entre estas técnicas. Para nuestro proyecto hemos implementado las técnicas de Sequential File y Extendible Hash
+El objetivo principal del proyecto es diseñar técnicas de organización de archivos en la memoria secundaria mediante la implementación de las funciones principales de inserción, eliminacion y búsqueda y asimismo realizar una comparación experimental entre estas técnicas. Para nuestro proyecto hemos implementado las técnicas de Sequential File y Extendible Hash
 
 ## **Dominio de los datos**
 Para la implementación del proyecto se han utilizado datasets en formato csv de la plataforma Kaggle, de los cuales seleccionaremos un key específico para cada csv en la implementación.
@@ -26,7 +29,41 @@ Respecto a la búsqueda por rango, se procederá a utilizar dos funciones de bú
 La complejidad es O(log(N) + M) para el caso de la búsqueda de un key específico y para la búsqueda por rango sería O(log(N) + N + M) puesto que primero se hace búsqueda binaria y luego una búsqueda secuencial que en el peor de los casos, puede recorrer todos los registros de ambos archivos. Note que N es la cantidad de datos en el archivo principal y M es la cantidad de datos para el archivo auxiliar.
 
 ## **Extendible Hash**
-# to run
+Propuesta por RONALD FAGIN, JURG NIEVERGELT,  NICHOLAS PIPPENGER y H. RAYMOND STRONG en el paper [Extendible Hashing A Fast Access
+Method for Dynamic Files](https://dl.acm.org/doi/pdf/10.1145/320083.320092).
+Es una estructura de datos para disco que almacena pares llave-valor en disco y garantiza el acceso a estos en no mas de 2 accesos a disco. Esto es posible gracias a la respuesta a dos preguntas:
+- ¿Como hacer un trie valanceado?
+- ¿Como hacer una tabla hash que se pueda redimencionar sin rehasear todos los elementos?  
+
+En el paper indagan en la solucion a estas preguntas asi que aqui simplemente nos limitaremos a explicar nuestra implementacion a continuacion.
+
+### **Estructura**
+#### **Registro General**
+Dado que queriamos realizar una estructura capaz de soportar cualquier tipo de registro o tabla (csv) nuestro registro general no es mas que una secuencia de bytes.
+#### **Informacion de Registro**
+Para poder interpretar un Registro necesitamos saber que tipo de dato tiene y de que tamaño es cada campo.
+Y es justamente eso lo que almacena esta estrutura.
+#### **Metadata de Registro**
+Una ves hallamos escrito el registro a un archivo este estara en una poscion o desplazamiento especifico y necesitamos esta informacion para poder leer el Registro. Es por eso que esta estructura guarda la posicion absoluta del registro y la Informacion requerida para poder leerlo e interpretarlo.
+#### **Llave**
+Dada la simplesa de nuestro Registro General las llaves usadas en esta implementacion son de tipo STRING. Esto nos permite tambien concatenar campos de un registro para de forma trivial soportar llaves compuestas.
+#### **Balde o Contenedor**
+Un conjunto de pares Llave-Metadata con un tamaño maximo fijo.
+#### **Piscina de Baldes**
+Interfaz que se encarga de leer o escribir baldes de disco segun se requiera. Actua tambien como cache en memoria de los baldes cargados previamente. Y facilita la implentacion del Extendible Hash
+#### **Funcion Hash**
+Dado que nuestro tipo de llave es un STRING simplemente usamos el HASH estandar que provee c++.
+#### **Directorio**
+#### **Extendible Hash**
+### **Operaciones**
+#### **Busqueda**
+#### **Insercion**
+##### **Doblamiento**
+#### **Eliminacion**
+#### **Indexacion**
+
+
+# **to run**
 create a build dir in the project folder
 ```
 mkdir project/build

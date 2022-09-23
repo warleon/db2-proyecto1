@@ -1,11 +1,14 @@
-$("#submit").submit(() => {
+$("#submit").click(() => {
+  console.log("working");
   let keyValues = [];
   $("#keyField")
     .children("input")
-    .each(() => {
-      keyValues.push($(this).val());
-    });
-  console.log(ek);
+    .each(
+      (i, e) => {
+        keyValues.push(e.val());
+      }
+    );
+  console.log(keyValues);
   const config = {
     url: "/search",
     type: "POST",
