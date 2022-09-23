@@ -142,3 +142,7 @@ turn on docker and run docker-compose
 ```
 sudo docker-compose up --build
 ```
+
+# video
+presentation/Final.mp4   
+[link al video](https://youtu.be/0nFmePy9fPc)
