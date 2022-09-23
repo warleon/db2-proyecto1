@@ -40,6 +40,13 @@ La complejidad de este algoritmo es de O(N+M) cuando se realiza una reconstruci√
 La funcion eliminar consiste en buscar un registro apartir de su key y marcarlo como eliminado. Posteriormente se actulizan los punteros del anterior que apuntaban a este y ahora puntaran al siguiente al siguiente que el registro eliminado apuntaba. Se concluye que este registro estara ailado de los demas y que solo apuntaran a registros que estan eliminados para posteriormente ignorarlos para la reconstrucci√≥n.
 La complejidad de este algoritmo es log(N), ya que marca como eliminado este registro y actualiza los punteros correspondientes. 
 
+### Cuadro de tiempo del Sequential File
+| :-------------------: | --- | --- | --- | --- | --- |
+| | 100 registros | 500 registros | 1000 registros | 1500 registros |
+| Sequential File | 0,001 | 0,0015 | 0,00211 | 0,003 | 
+
+
+
 ## **Extendible Hash**
 Propuesta por RONALD FAGIN, JURG NIEVERGELT,  NICHOLAS PIPPENGER y H. RAYMOND STRONG en el paper [Extendible Hashing A Fast Access
 Method for Dynamic Files](https://dl.acm.org/doi/pdf/10.1145/320083.320092).
